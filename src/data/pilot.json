@@ -1,0 +1,102 @@
+[
+  {
+    "slug": "sample-cedar",
+    "name": "Cedar Community Mosque",
+    "latitude": 24.8615,
+    "longitude": 67.011,
+    "verified": true,
+    "daysAgo": 0,
+    "offset": 0,
+    "sessions": 2
+  },
+  {
+    "slug": "sample-garden",
+    "name": "Garden Lane Mosque",
+    "latitude": 24.865,
+    "longitude": 67.014,
+    "verified": true,
+    "daysAgo": 1,
+    "offset": 5,
+    "sessions": 3
+  },
+  {
+    "slug": "sample-willow",
+    "name": "Willow Courtyard Mosque",
+    "latitude": 24.853,
+    "longitude": 67.018,
+    "verified": false,
+    "daysAgo": 12,
+    "offset": 10,
+    "sessions": 1
+  },
+  {
+    "slug": "sample-meadow",
+    "name": "Meadow Community Mosque",
+    "latitude": 24.871,
+    "longitude": 67.005,
+    "verified": true,
+    "daysAgo": 3,
+    "offset": 15,
+    "sessions": 2
+  },
+  {
+    "slug": "sample-harbour",
+    "name": "Harbour Lane Mosque",
+    "latitude": 24.85,
+    "longitude": 67.002,
+    "verified": false,
+    "daysAgo": 20,
+    "offset": 0,
+    "sessions": 2
+  },
+  {
+    "slug": "sample-olive",
+    "name": "Olive Square Mosque",
+    "latitude": 24.88,
+    "longitude": 67.02,
+    "verified": true,
+    "daysAgo": 2,
+    "offset": 5,
+    "sessions": 3
+  },
+  {
+    "slug": "sample-maple",
+    "name": "Maple Street Mosque",
+    "latitude": 24.84,
+    "longitude": 67.019,
+    "verified": false,
+    "daysAgo": 7,
+    "offset": 10,
+    "sessions": 1
+  },
+  {
+    "slug": "sample-riverside",
+    "name": "Riverside Community Mosque",
+    "latitude": 24.867,
+    "longitude": 67.04,
+    "verified": true,
+    "daysAgo": 5,
+    "offset": 15,
+    "sessions": 2
+  },
+  {
+    "slug": "sample-orchard",
+    "name": "Orchard Lane Mosque",
+    "latitude": 24.89,
+    "longitude": 67.015,
+    "verified": true,
+    "daysAgo": 1,
+    "offset": 0,
+    "sessions": 3
+  },
+  {
+    "slug": "sample-cypress",
+    "name": "Cypress Community Mosque",
+    "latitude": 24.838,
+    "longitude": 66.99,
+    "verified": false,
+    "daysAgo": 30,
+    "offset": 5,
+    "sessions": 1
+  }
+]

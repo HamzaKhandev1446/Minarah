@@ -1,0 +1,13 @@
+-- Run through a privileged Supabase SQL Editor session AFTER registering and
+-- confirming your own account. Replace the placeholder email before execution.
+-- This never grants mosque membership automatically.
+do $$
+declare target_user uuid;
+begin
+  select id into target_user from auth.users
+  where lower(email) = lower('REPLACE_WITH_YOUR_CONFIRMED_EMAIL')
+    and email_confirmed_at is not null;
+  if target_user is null then raise exception 'Confirmed account not found'; end if;
+  insert into public.platform_admins(user_id) values(target_user) on conflict(user_id) do nothing;
+end;
+$$;

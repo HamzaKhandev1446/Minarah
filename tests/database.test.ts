@@ -1,0 +1,438 @@
+import { PGlite } from "@electric-sql/pglite";
+import { postgis } from "@electric-sql/pglite-postgis";
+import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
+import { pg_trgm } from "@electric-sql/pglite/contrib/pg_trgm";
+import { readFile } from "node:fs/promises";
+import { beforeAll, afterAll, describe, expect, it } from "vitest";
+
+// Real PostgreSQL/PostGIS execution. Only Supabase's auth schema/JWT context is
+// supplied by this harness; migration SQL and RLS are run unchanged.
+const db = new PGlite({ extensions: { postgis, btree_gist, pg_trgm } });
+const mosque = "00000000-0000-4000-8000-000000000001";
+const member = "20000000-0000-4000-8000-000000000001";
+const stranger = "20000000-0000-4000-8000-000000000002";
+const prayers = ["fajr", "dhuhr", "asr", "maghrib", "isha"].map(
+  (prayer, i) => ({
+    prayer,
+    localTime: ["05:30", "13:15", "17:00", "18:45", "20:45"][i],
+  }),
+);
+
+async function asRole<T>(
+  role: "anon" | "authenticated",
+  user: string | null,
+  callback: () => Promise<T>,
+): Promise<T> {
+  await db.exec(`set role ${role}`);
+  await db.query("select set_config('request.jwt.claim.sub', $1, false)", [
+    user ?? "",
+  ]);
+  try {
+    return await callback();
+  } finally {
+    await db.exec("reset role");
+    await db.query("select set_config('request.jwt.claim.sub', '', false)");
+  }
+}
+
+async function saveDraft(target = mosque, entries = prayers) {
+  const result = await db.query<{ id: string }>(
+    "select public.save_schedule_draft($1, '2030-01-01', '2030-01-31', $2::jsonb, $3::jsonb, $4::jsonb) as id",
+    [
+      target,
+      JSON.stringify(entries),
+      JSON.stringify([
+        { position: 1, localTime: "13:15", label: null },
+        { position: 2, localTime: "14:00", label: null },
+      ]),
+      JSON.stringify([
+        { prayer: "isha", localDate: "2030-01-10", localTime: "21:00" },
+      ]),
+    ],
+  );
+  return result.rows[0]!.id;
+}
+
+beforeAll(async () => {
+  await db.exec(`create role anon nologin; create role authenticated nologin; create schema auth;
+    create table auth.users(id uuid primary key);
+    create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+    grant usage on schema public, auth to anon, authenticated;
+    grant execute on function auth.uid() to anon, authenticated;`);
+  for (const file of [
+    "202609070001_foundation.sql",
+    "202609070002_schedule_transactions.sql",
+    "202609070003_public_distance.sql",
+    "202609080004_onboarding_and_qr.sql",
+  ])
+    await db.exec(await readFile(`supabase/migrations/${file}`, "utf8"));
+  await db.exec(await readFile("supabase/seed.sql", "utf8"));
+  await db.query("insert into auth.users values ($1), ($2)", [
+    member,
+    stranger,
+  ]);
+  await db.query(
+    "insert into public.mosque_members(mosque_id, user_id, role) values ($1, $2, 'editor')",
+    [mosque, member],
+  );
+});
+afterAll(async () => {
+  await db.close();
+});
+
+describe("migrations, PostGIS and row-level security", () => {
+  it("loads ten synthetic mosques and keeps all app tables under RLS", async () => {
+    expect(
+      (
+        await db.query<{ count: number }>(
+          "select count(*)::int as count from public.mosques where is_synthetic",
+        )
+      ).rows[0]?.count,
+    ).toBe(10);
+    const rows = (
+      await db.query<{ relname: string }>(
+        "select relname from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind = 'r' and not c.relrowsecurity",
+      )
+    ).rows;
+    expect(rows).toEqual([]);
+  });
+  it("calculates detail distance with database permissions and coordinate validation", async () => {
+    await asRole("anon", null, async () => {
+      const result = await db.query<{ distance: number }>(
+        "select public.mosque_distance($1, 24.8615, 67.011) as distance",
+        [mosque],
+      );
+      expect(result.rows[0]?.distance).toBeCloseTo(0);
+      expect(
+        (
+          await db.query<{ distance: number | null }>(
+            "select public.mosque_distance('ffffffff-ffff-4fff-8fff-ffffffffffff', 0, 0) as distance",
+          )
+        ).rows[0]?.distance,
+      ).toBeNull();
+      await expect(
+        db.query("select public.mosque_distance($1, 91, 0)", [mosque]),
+      ).rejects.toThrow("Invalid coordinates");
+    });
+  });
+
+  it("returns nearby mosques sorted by geodesic distance and respects radius", async () => {
+    await asRole("anon", null, async () => {
+      const result = await db.query<{ distance_meters: number; id: string }>(
+        "select * from public.nearby_mosques(24.8615, 67.011, 5000, 20)",
+      );
+      expect(result.rows).toHaveLength(10);
+      expect(result.rows[0]?.id).toBe(mosque);
+      expect(result.rows[0]?.distance_meters).toBeCloseTo(0);
+      expect(result.rows.map((row) => row.distance_meters)).toEqual(
+        [...result.rows.map((row) => row.distance_meters)].sort(
+          (a, b) => a - b,
+        ),
+      );
+      expect(
+        (
+          await db.query(
+            "select * from public.nearby_mosques(24.8615, 67.011, 100, 20)",
+          )
+        ).rows,
+      ).toHaveLength(1);
+      expect(
+        (await db.query("select * from public.nearby_mosques(0, 0, 5000, 20)"))
+          .rows,
+      ).toHaveLength(0);
+      await expect(
+        db.query("select * from public.nearby_mosques(91, 0, 5000, 20)"),
+      ).rejects.toThrow("Invalid nearby");
+    });
+  });
+  it("searches names/cities while treating wildcard characters literally", async () => {
+    await asRole("anon", null, async () => {
+      expect(
+        (await db.query("select * from public.search_mosques('cedar')")).rows,
+      ).toHaveLength(1);
+      expect(
+        (await db.query("select * from public.search_mosques('Karachi')")).rows,
+      ).toHaveLength(10);
+      expect(
+        (await db.query("select * from public.search_mosques('%%')")).rows,
+      ).toHaveLength(0);
+    });
+  });
+  it("resolves QR codes without exposing their table, including disabled/invalid cases", async () => {
+    const code = (
+      await db.query<{ code: string }>(
+        "select code from public.mosque_qr_codes where mosque_id = $1",
+        [mosque],
+      )
+    ).rows[0]!.code;
+    expect(code).toMatch(/^[A-Za-z0-9_-]{22}$/);
+    await asRole("anon", null, async () => {
+      expect(
+        (await db.query("select * from public.resolve_qr($1)", [code])).rows,
+      ).toEqual([{ status: "active", mosque_slug: "sample-cedar" }]);
+      expect(
+        (await db.query("select * from public.resolve_qr('../bad')")).rows,
+      ).toEqual([{ status: "invalid", mosque_slug: null }]);
+      expect(
+        (
+          await db.query(
+            "select * from public.resolve_qr('abcdefghijklmnopqrstuv')",
+          )
+        ).rows,
+      ).toEqual([{ status: "invalid", mosque_slug: null }]);
+      await expect(
+        db.query("select * from public.mosque_qr_codes"),
+      ).rejects.toThrow("permission denied");
+    });
+    await db.query(
+      "update public.mosque_qr_codes set status = 'disabled' where code = $1",
+      [code],
+    );
+    await asRole("anon", null, async () =>
+      expect(
+        (await db.query("select * from public.resolve_qr($1)", [code])).rows,
+      ).toEqual([{ status: "disabled", mosque_slug: null }]),
+    );
+    await db.query(
+      "update public.mosque_qr_codes set status = 'active' where code = $1",
+      [code],
+    );
+  });
+  it("blocks strangers, anonymous writes, self-granted membership and direct publication", async () => {
+    await asRole("anon", null, async () => {
+      await expect(saveDraft()).rejects.toThrow("permission denied");
+    });
+    await asRole("authenticated", stranger, async () => {
+      await expect(saveDraft()).rejects.toThrow("membership required");
+      await expect(
+        db.query(
+          "insert into public.mosque_members(mosque_id,user_id,role) values($1,$2,'owner')",
+          [mosque, stranger],
+        ),
+      ).rejects.toThrow("permission denied");
+      await expect(
+        db.query("insert into public.platform_admins(user_id) values($1)", [
+          stranger,
+        ]),
+      ).rejects.toThrow("permission denied");
+    });
+    await asRole("authenticated", member, async () => {
+      await expect(
+        db.query("update public.jamaat_schedules set status = 'published'"),
+      ).rejects.toThrow("permission denied");
+      await expect(
+        db.query(
+          "update public.jamaat_schedule_entries set local_time = '21:00'",
+        ),
+      ).rejects.toThrow("permission denied");
+      await expect(
+        saveDraft("00000000-0000-4000-8000-000000000002"),
+      ).rejects.toThrow("membership required");
+    });
+  });
+  it("keeps drafts and their children private, publishes atomically, and audits replacement", async () => {
+    const draft = await asRole("authenticated", member, () => saveDraft());
+    await asRole("anon", null, async () => {
+      expect(
+        (
+          await db.query(
+            "select * from public.jamaat_schedules where id = $1",
+            [draft],
+          )
+        ).rows,
+      ).toHaveLength(0);
+      for (const table of [
+        "jamaat_schedule_entries",
+        "jumuah_sessions",
+        "schedule_overrides",
+      ])
+        expect(
+          (
+            await db.query(
+              `select * from public.${table} where schedule_id = $1`,
+              [draft],
+            )
+          ).rows,
+        ).toHaveLength(0);
+    });
+    await asRole("authenticated", member, async () => {
+      await expect(
+        db.query("select public.publish_schedule($1, 2)", [draft]),
+      ).rejects.toThrow("Draft changed");
+      await db.query("select public.publish_schedule($1, 1)", [draft]);
+    });
+    await asRole("anon", null, async () => {
+      expect(
+        (
+          await db.query(
+            "select * from public.jamaat_schedule_entries where schedule_id = $1",
+            [draft],
+          )
+        ).rows,
+      ).toHaveLength(5);
+      expect(
+        (
+          await db.query(
+            "select * from public.jumuah_sessions where schedule_id = $1",
+            [draft],
+          )
+        ).rows,
+      ).toHaveLength(2);
+    });
+    const replacement = await asRole("authenticated", member, () =>
+      saveDraft(),
+    );
+    await asRole("authenticated", member, async () => {
+      await db.query("select public.publish_schedule($1, 1)", [replacement]);
+    });
+    const audit = (
+      await db.query<{
+        previous_value: unknown;
+        new_value: unknown;
+        change_type: string;
+      }>("select * from public.schedule_change_log where schedule_id = $1", [
+        replacement,
+      ])
+    ).rows[0]!;
+    expect(audit.change_type).toBe("replace");
+    expect(audit.previous_value).not.toBeNull();
+    expect(audit.new_value).toHaveProperty("overrides");
+    expect(
+      (
+        await db.query<{ status: string }>(
+          "select status from public.jamaat_schedules where id = $1",
+          [draft],
+        )
+      ).rows[0]?.status,
+    ).toBe("archived");
+    await asRole("authenticated", member, async () => {
+      await expect(
+        db.query("delete from public.schedule_change_log"),
+      ).rejects.toThrow("permission denied");
+    });
+  });
+  it("rejects invalid inputs and rolls back failed overlapping publication", async () => {
+    await asRole("authenticated", member, async () => {
+      await expect(saveDraft(mosque, prayers.slice(1))).rejects.toThrow(
+        "five prayers",
+      );
+      await expect(
+        saveDraft(
+          mosque,
+          prayers.map((p) => ({ ...p, localTime: "25:00" })),
+        ),
+      ).rejects.toThrow("HH:mm");
+      const result = await db.query<{ id: string }>(
+        "select public.save_schedule_draft($1, '2030-01-15', '2030-02-15', $2::jsonb) as id",
+        [mosque, JSON.stringify(prayers)],
+      );
+      const id = result.rows[0]!.id;
+      await expect(
+        db.query("select public.publish_schedule($1, 1)", [id]),
+      ).rejects.toThrow("exclusion constraint");
+      expect(
+        (
+          await db.query<{ status: string }>(
+            "select status from public.jamaat_schedules where id = $1",
+            [id],
+          )
+        ).rows[0]?.status,
+      ).toBe("draft");
+      expect(
+        (
+          await db.query(
+            "select * from public.schedule_change_log where schedule_id = $1",
+            [id],
+          )
+        ).rows,
+      ).toHaveLength(0);
+    });
+  });
+  it("rejects stale draft saves without losing the current entries", async () => {
+    await asRole("authenticated", member, async () => {
+      const id = await saveDraft();
+      const changed = prayers.map((entry) =>
+        entry.prayer === "isha" ? { ...entry, localTime: "21:15" } : entry,
+      );
+      await db.query(
+        "select public.save_schedule_draft($1, '2030-01-01', '2030-01-31', $2::jsonb, '[]', '[]', $3, 1)",
+        [mosque, JSON.stringify(changed), id],
+      );
+      await expect(
+        db.query(
+          "select public.save_schedule_draft($1, '2030-01-01', '2030-01-31', $2::jsonb, '[]', '[]', $3, 1)",
+          [mosque, JSON.stringify(prayers), id],
+        ),
+      ).rejects.toThrow("Draft changed");
+      expect(
+        (
+          await db.query<{ local_time: string }>(
+            "select local_time from public.jamaat_schedule_entries where schedule_id = $1 and prayer = 'isha'",
+            [id],
+          )
+        ).rows[0]?.local_time,
+      ).toBe("21:15:00");
+      await expect(
+        db.query("select public.schedule_snapshot($1)", [id]),
+      ).rejects.toThrow("permission denied");
+    });
+  });
+
+  it("keeps rejected mosques and private contact records out of public reads", async () => {
+    const rejected = "00000000-0000-4000-8000-000000000003";
+    await db.query(
+      "update public.mosques set verification_status = 'rejected' where id = $1",
+      [rejected],
+    );
+    await asRole("anon", null, async () => {
+      expect(
+        (
+          await db.query("select * from public.mosques where id = $1", [
+            rejected,
+          ])
+        ).rows,
+      ).toHaveLength(0);
+      expect(
+        (
+          await db.query(
+            "select * from public.jamaat_schedules where mosque_id = $1",
+            [rejected],
+          )
+        ).rows,
+      ).toHaveLength(0);
+      for (const table of [
+        "mosque_claims",
+        "mosque_submissions",
+        "profiles",
+        "schedule_change_log",
+      ])
+        await expect(db.query(`select * from public.${table}`)).rejects.toThrow(
+          "permission denied",
+        );
+    });
+    await db.query(
+      "update public.mosques set verification_status = 'unverified' where id = $1",
+      [rejected],
+    );
+  });
+
+  it("blocks suspended members and invalid mosque timezones", async () => {
+    await db.query(
+      "update public.mosque_members set status = 'suspended' where user_id = $1",
+      [member],
+    );
+    await asRole("authenticated", member, async () => {
+      await expect(saveDraft()).rejects.toThrow("membership required");
+    });
+    await db.query(
+      "update public.mosque_members set status = 'active' where user_id = $1",
+      [member],
+    );
+    await expect(
+      db.query(
+        "update public.mosques set timezone = 'not-a-timezone' where id = $1",
+        [mosque],
+      ),
+    ).rejects.toThrow("Unknown IANA timezone");
+  });
+});
