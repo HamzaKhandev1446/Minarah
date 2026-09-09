@@ -6,7 +6,17 @@ Mosque-published Jamaat information. Phase 1 connects a mosque's published sched
 
 ## Current milestone
 
-Milestone 3 public reads are implemented on the foundation: location-based discovery, manual search, mosque detail pages, local follows, next Jamaat/countdowns and published schedule refresh. Live reads use anonymous Supabase queries and require a configured project. Admin screens, QR pages, onboarding and PWA behavior remain later milestones.
+Use `hamzakhan.dev1446@gmail.com` for project services and deployment. Verify the authenticated account and project ownership before changing hosted resources.
+
+The app is deployed at **[minarah-seven.vercel.app](https://minarah-seven.vercel.app)**. Home and PWA launch open the map, including before any search results exist. Search returns registered mosque markers and separately labelled map-provider places; either can be saved in Following. Registered mosque boards show published times. Map & discover uses Leaflet/OpenStreetMap; directions open Google Maps. See [Following, maps and registration](specs/features/010-following-maps-registration.md).
+
+Register your mosque is the entry to representative registration, existing-mosque claims, directory submissions and management. The fifth migration, `202609090005_registration_moderators.sql`, enables reviewed owner registration and two confirmed moderator nominations. Moderators can save daily-time drafts for an existing period; managers publish. Nominees accept from their signed-in dashboard; no invitation email is sent. Registration opens a location-first flow: search, current location, draggable pin or manual coordinates; confirm location, create an account/sign in, then enter representative and mosque details. The sixth migration stores representative-supplied sect and optional sub-sect privately for review. The map and account steps work before schema setup; final submission remains unavailable until both migrations are connected. Apply these versioned migrations to an existing project; never rerun `setup.sql` there.
+
+To install on Android, open the deployed site in Chrome and choose **Install Minarah**, or **Add to home screen → Install** from the browser menu. On iPhone, open it in Safari, choose **Share → Add to Home Screen**, enable **Open as Web App** when shown, then **Add**. Follow mosques on that phone; follows are stored locally and are not synchronized between devices. See the [Android instructions](https://support.google.com/chrome/answer/9658361?co=GENIE.Platform%3DAndroid&hl=en-GB) and [iPhone instructions](https://support.apple.com/en-gb/guide/iphone/iphea86e5236/ios).
+
+In Supabase Auth, set Site URL to `https://minarah-seven.vercel.app` and allow both `https://minarah-seven.vercel.app/auth/callback` and `https://minarah-seven.vercel.app/auth/callback?next=/register-mosque`. Vercel has the canonical origin and existing Supabase public settings; the hosted Auth allowlist and authenticated registration/publication acceptance still require verification. Deployment currently uses Vercel CLI; automatic GitHub deployment could not be connected during setup.
+
+Phase 1 workflows are implemented: public discovery/follows, QR resolution and posters, authentication, authorized schedule editing/publication, mosque submissions and claims, platform review, and a minimal PWA offline fallback. See [status](specs/STATUS.md) for verification and remaining release checks. Hosted search and QR connectivity passed; authenticated hosted workflows still require verification.
 
 ## Run locally
 
@@ -17,7 +27,7 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000` for the live directory. To explore without credentials, open `http://localhost:3000/?mode=demo`, then choose **Try sample location** or search **Cedar** / **Karachi**. Demo mosque details preserve `?mode=demo`. Demo and live follows use separate storage keys, and live failures never fall back to samples.
+Open `http://localhost:3000` for the live directory. To explore without credentials, open `http://localhost:3000/?mode=demo`, choose **Map & discover**, then **Try sample location** or search **Cedar** / **Karachi**. Demo mosque details preserve `?mode=demo`. Demo and live follows use separate storage keys, and live failures never fall back to samples.
 
 ```sh
 npm run format:check
@@ -36,7 +46,7 @@ Browser checks run separately with `npm run build` followed by `npm run test:e2e
 
 ## Supabase setup
 
-Milestone 3 adds migration `202609070003_public_distance.sql` for a single mosque's distance on its detail page. Apply all three migrations to the connected project before testing live reads. `/api/discovery` accepts bounded POST requests so visitor coordinates stay out of URL query strings. Application code does not persist or log those coordinates; configure hosting observability not to capture request bodies containing location data.
+Apply all six versioned migrations, including `202609090005_registration_moderators.sql` and `202609090006_registration_classification.sql`, before using the complete application. `/api/discovery` accepts bounded POST requests so visitor coordinates stay out of URL query strings. Application code does not persist or log those coordinates; configure hosting observability not to capture request bodies containing location data.
 
 Local Supabase requires Docker. Start Docker, then:
 
@@ -49,7 +59,7 @@ The reset command destroys **local development** database data and rebuilds migr
 
 Copy `.env.example` to `.env.local`, then fill `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` from the local CLI output or your Supabase project's Connect dialog. Configure the canonical public URL before QR poster generation. Never put service-role/secret keys in public variables. No service-role key is needed by the current application code.
 
-For hosted infrastructure, apply versioned migrations through your normal Supabase migration workflow. **Do not apply `supabase/seed.sql` to production.** Configure auth's Site URL and permitted callback URL for the actual deployment. No hosted project has been connected or changed by this work.
+For hosted infrastructure, apply versioned migrations through your normal Supabase migration workflow. **Do not apply `supabase/seed.sql` to production.** Configure auth's Site URL and permitted callback URL for the actual deployment. Read-only hosted public connectivity has passed; hosted authenticated workflows remain unverified.
 
 Synthetic data is defined in `src/data/pilot.json`. After changing it, run `npm run db:seed:generate`, then reset the local database. This creates ten fictional Karachi mosques with varied coordinates, publication ages, times, verification states, one to three Friday sessions, a tomorrow-Isha override, and random QR tokens. Seed periods span the previous, current and following months at seed time. Re-seed local development if those periods expire.
 
@@ -62,13 +72,15 @@ Synthetic data is defined in `src/data/pilot.json`. After changing it, run `npm 
 - Clients have no direct schedule-write privileges. `save_schedule_draft` validates and saves a complete bundle atomically. Pass `draft_id` and `expected_revision` when updating a draft.
 - `publish_schedule` verifies membership and revision, locks publication per mosque, archives an existing matching period, publishes the new bundle and records old/new snapshots in one transaction.
 - An exact effective period can be replaced. A different overlapping period fails and rolls back. Published revisions are immutable through application APIs. Future editors should guide administrators to use exact-period replacement or non-overlapping new periods.
-- Profiles, claims, submissions and platform-role tables are provisioned with conservative RLS. Onboarding write/review workflows are intentionally not exposed until that milestone adds validation and abuse controls.
+- Profiles, claims, submissions and platform-role tables use RLS. Validated RPCs accept pending submissions/claims; platform-only review RPCs grant membership only for approved claims. Public submissions have a bounded hourly queue and duplicate gate; authenticated claims have a daily limit.
 - QR tokens are UUID-derived 22-character URL-safe random values. Anonymous users can only call the narrow `resolve_qr` function, not list tokens or creator IDs. Resolving codes does not mutate follows or record personal scan data.
 - `nearby_mosques` uses indexed `ST_DWithin` and `ST_Distance`, validates coordinates, limits radius to 50 km and returns at most 50 rows. The server's default is configured with `NEARBY_RADIUS_METERS` (5000). Manual search escapes wildcard input and has a trigram index.
 
 An operator can add a confirmed Supabase Auth user to `platform_admins` through a privileged SQL session. Never derive that role from user-editable metadata. For local admin testing, insert a `mosque_members` record for a confirmed test user and a seeded mosque. The seed deliberately creates no passwords or privileged accounts.
 
 ## Time and language architecture
+
+See [release setup](specs/features/004-009-mvp-completion.md#release-setup) for administration routes, project-local tooling and remaining hosted verification.
 
 The domain uses neutral prayer keys (`fajr`, `dhuhr`, etc.), local `HH:mm` clock values, ISO calendar dates and per-mosque IANA timezones. One resolver selects published periods and date overrides. Friday Jumu'ah sessions replace Dhuhr in the next-congregation sequence. Tomorrow's Fajr is resolved separately; an expired schedule never silently repeats.
 
@@ -85,3 +97,13 @@ This validates SQL behavior locally without Docker; it does not test Supabase Au
 References used for the setup: [Next.js installation](https://nextjs.org/docs/app/getting-started/installation), [Supabase SSR clients](https://supabase.com/docs/guides/auth/server-side/creating-a-client), [Supabase PostGIS](https://supabase.com/docs/guides/database/extensions/postgis), [PGlite extensions](https://pglite.dev/extensions/).
 
 See `PHASE_1_PLAN.md` for the running milestone checklist and audit.
+
+## Release verification
+
+Set `NEXT_PUBLIC_SITE_URL` explicitly for production builds, including local production previews. Vercel builds (or `MINARAH_RELEASE=1`) require a public HTTPS origin and Supabase public configuration. Auth callbacks ignore request-host and redirect parameters. Failed confirmation links offer a resend action on the login page.
+
+Run `supabase/verify-release.sql` as the database owner for a read-only deployed-object/RLS/grant audit. This audit does not verify Auth configuration or email delivery.
+
+For Firefox and WebKit coverage, install the matching Playwright browsers and run `MINARAH_CROSS_BROWSER=1 npm run test:e2e` (set environment variables using your shell's syntax). Automated accessibility checks cover public discovery, detail, login, submission and sample poster pages; they do not replace manual accessibility or real-device testing.
+
+`npm run test:live` uses the staging variables in `.env.example`. Supply a dedicated staging deployment, two different confirmed accounts, and platform membership for the platform account; set `MINARAH_E2E_STAGING=1`. The test creates a labelled mosque, approves its submission and claim, checks draft privacy, publishes Isha 20:30 then 20:45, checks history/QR and signs out. It leaves these records for inspection; use a disposable staging project. Never target the live mosque directory. Authenticated acceptance remains pending until these prerequisites are configured.

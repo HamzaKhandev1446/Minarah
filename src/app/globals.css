@@ -1,5 +1,341 @@
 @import "tailwindcss";
 
+.home-tabs {
+  display: flex;
+  gap: 10px;
+  margin-block: 22px;
+}
+.board-shell {
+  max-width: 1100px;
+  margin-inline: auto;
+  padding: 24px 20px 60px;
+}
+.board-back {
+  margin-block-end: 20px;
+}
+.mosque-board {
+  color: #effaf9;
+  background:
+    linear-gradient(100deg, #041720ed 5%, #051b23bc 65%, #071b2266),
+    url("/mosque-backdrop.webp") center / cover;
+  border: 1px solid #24565a;
+  border-radius: 20px;
+  padding: clamp(22px, 4vw, 46px);
+  box-shadow: 0 22px 60px #001d2926;
+  overflow: hidden;
+}
+.board-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 28px;
+  border-bottom: 1px solid #67d4c343;
+  padding-bottom: 22px;
+}
+.board-header h2 {
+  font-size: clamp(26px, 3.7vw, 42px);
+  letter-spacing: -1px;
+  line-height: 1.2;
+  margin: 8px 0 12px;
+  overflow-wrap: anywhere;
+}
+.board-header p {
+  margin: 6px 0;
+}
+.board-header .eyebrow {
+  color: #8ae7d4;
+  font-size: 10px;
+}
+.board-clock {
+  text-align: end;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.board-clock time {
+  font-size: clamp(22px, 3vw, 34px);
+  font-weight: 600;
+}
+.board-clock p,
+.board-clock small {
+  color: #d2e2e5;
+  font-size: 13px;
+}
+.board-main {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 28px;
+  align-items: center;
+  margin-block: 24px;
+}
+.board-section-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #c0dbdc;
+  margin: 0 0 12px;
+}
+.board-prayers {
+  margin: 0;
+}
+.board-prayers > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 12px;
+  border-radius: 6px;
+  font-size: clamp(18px, 2.4vw, 26px);
+}
+.board-prayers dt small {
+  display: block;
+  font-size: 10px;
+  color: #a9f0df;
+}
+.board-prayers dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.board-active {
+  background: #007c7066;
+  box-shadow: inset 3px 0 #60e8c8;
+}
+.board-next {
+  text-align: center;
+  background: #00171ce8;
+  border: 1px solid #329d89;
+  border-radius: 10px;
+  padding: 26px 16px;
+}
+.board-next h3 {
+  color: #78f0d1;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 18px;
+}
+.board-next-name {
+  font-size: clamp(26px, 3vw, 38px);
+  margin: 4px 0;
+}
+.board-next-time {
+  font-size: clamp(28px, 3.8vw, 46px);
+  font-weight: 600;
+  color: #78f0d1;
+  margin: 8px 0;
+  font-variant-numeric: tabular-nums;
+}
+.board-next > p:last-child {
+  color: #d8ebed;
+  font-size: 14px;
+}
+.board-friday {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 26px;
+  align-items: center;
+  padding-block: 20px;
+  border-block: 1px solid #67d4c343;
+}
+.board-friday h3 {
+  margin: 0;
+  font-size: 22px;
+}
+.board-friday > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  font-size: 22px;
+}
+.board-friday small {
+  font-size: 12px;
+}
+.board-footer {
+  position: relative;
+  padding-top: 14px;
+}
+.board-footer > p {
+  font-size: 12px;
+  color: #cbdddd;
+}
+.board-footer .follow-control {
+  display: inline-grid;
+  margin: 10px 18px 0 0;
+}
+.board-footer .follow-control .muted {
+  color: #d5ebe6;
+}
+.board-footer .button {
+  background: #b9f2de;
+  color: #052d29;
+  border-color: #b9f2de;
+}
+.board-details-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 13px;
+}
+.board-demo {
+  border: 1px solid #c2b481;
+  background: #302a15d9;
+  color: #fff2c9;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.mosque-tile {
+  border: 1px solid #d5dfd8;
+  border-radius: 18px;
+  background: white;
+  overflow: hidden;
+}
+.mosque-tile-open {
+  display: block;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: white;
+  cursor: pointer;
+  width: 100%;
+  text-align: start;
+  font: inherit;
+}
+.tile-banner {
+  display: flex;
+  align-items: flex-end;
+  min-height: 125px;
+  padding: 18px;
+  background:
+    linear-gradient(90deg, #061c27aa, #061c2722),
+    url("/mosque-backdrop.webp") center 47% / cover;
+  color: white;
+}
+.tile-banner > span {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  background: #001923b8;
+  padding: 7px 10px;
+  border-radius: 20px;
+}
+.tile-copy {
+  display: grid;
+  gap: 8px;
+  padding: 20px;
+}
+.tile-copy > strong {
+  font-size: 22px;
+}
+.tile-copy > span {
+  font-size: 13px;
+}
+.tile-next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 12px;
+  border-top: 1px solid #e1e9e1;
+  padding-top: 18px;
+}
+.tile-next small {
+  display: block;
+  color: #53675e;
+  margin-top: 5px;
+}
+.tile-next b {
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+.mosque-tile > .follow-control {
+  margin: 0 20px 20px;
+}
+.mosque-map {
+  height: 420px;
+  border-radius: 16px;
+  background: #e4e9e2;
+  z-index: 0;
+}
+.map-panel {
+  margin-block: 22px 32px;
+}
+.mosque-pin span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50% 50% 50% 3px;
+  border: 3px solid white;
+  box-shadow: 0 3px 12px #002a3544;
+  background: #174f46;
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+}
+.leaflet-control-attribution {
+  max-width: 100%;
+  font-size: 11px !important;
+}
+.registration-intro {
+  max-width: 720px;
+}
+.install-guide {
+  font-size: 14px;
+  line-height: 1.8;
+}
+@media (max-width: 640px) {
+  .board-shell {
+    padding: 18px 12px 40px;
+  }
+  .mosque-board {
+    padding: 22px 18px;
+    background-position: 65% center;
+    border-radius: 14px;
+  }
+  .board-header {
+    flex-direction: column;
+    gap: 14px;
+  }
+  .board-clock {
+    text-align: start;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 5px 12px;
+  }
+  .board-clock small {
+    width: 100%;
+  }
+  .board-main {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    margin-block: 18px;
+  }
+  .board-prayers > div {
+    font-size: 21px;
+    padding: 12px 10px;
+  }
+  .board-next {
+    padding: 18px 12px;
+  }
+  .board-next h3 {
+    margin-bottom: 8px;
+  }
+  .board-next-name {
+    font-size: 25px;
+  }
+  .board-next-time {
+    font-size: 35px;
+  }
+  .board-friday > div {
+    font-size: 19px;
+  }
+  .mosque-map {
+    height: 340px;
+  }
+}
+
 .main-nav {
   display: flex;
   gap: 16px;
@@ -465,7 +801,7 @@ input {
   color: #a37c45;
 }
 .header-note {
-  color: #69766d;
+  color: #53634f;
   font-size: 13px;
 }
 .preview-pill {
@@ -582,7 +918,7 @@ h1 em {
 }
 .card-heading .eyebrow {
   margin: 0 0 10px;
-  color: #6b7c6d;
+  color: #53634f;
   font-size: 9px;
 }
 .card-heading h2 {
@@ -592,7 +928,7 @@ h1 em {
   margin: 0;
 }
 .muted {
-  color: #67766d;
+  color: #4d6056;
   font-size: 11px;
   line-height: 1.5;
   margin: 8px 0 0;
@@ -651,7 +987,7 @@ h1 em {
 }
 .section-heading > span {
   font-size: 10px;
-  color: #768273;
+  color: #53634f;
 }
 .prayer-list {
   margin-block: 17px 10px;
@@ -731,7 +1067,7 @@ h1 em {
 .site-footer p,
 .site-footer > span {
   font-size: 11px;
-  color: #6b7969;
+  color: #53634f;
 }
 @media (max-width: 900px) {
   .page-shell {
@@ -820,4 +1156,50 @@ h1 em {
   *::after {
     scroll-behavior: auto !important;
   }
+}
+
+.registration-flow {
+  margin-block: 24px 40px;
+}
+.registration-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+.registration-steps li {
+  border: 1px solid #b6c8bd;
+  border-radius: 20px;
+  padding: 8px 14px;
+}
+.registration-steps [aria-current="step"] {
+  color: #fff;
+  background: #174f46;
+}
+.location-picker {
+  display: grid;
+  gap: 14px;
+  margin-block-end: 20px;
+}
+.location-picker > button {
+  justify-self: start;
+}
+.location-picker p {
+  margin: 0;
+}
+.place-results {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  padding: 0;
+}
+.place-results button {
+  text-align: start;
+  white-space: normal;
+}
+.location-picker .mosque-map {
+  height: min(48vh, 440px);
+  min-height: 300px;
+  border-radius: 18px;
 }

@@ -10,7 +10,7 @@ export async function reviewRecord(
   const parsed = z
     .object({
       id: z.uuid(),
-      kind: z.enum(["claim", "submission"]),
+      kind: z.enum(["claim", "submission", "registration"]),
       decision: z.enum(["approve", "reject"]),
       role: z.enum(["owner", "admin", "editor"]).default("admin"),
     })
@@ -25,10 +25,15 @@ export async function reviewRecord(
             approve: value.decision === "approve",
             member_role: value.role,
           })
-        : await db.rpc("review_mosque_submission", {
-            submission_id: value.id,
-            approve: value.decision === "approve",
-          });
+        : await db.rpc(
+            value.kind === "registration"
+              ? "review_mosque_registration"
+              : "review_mosque_submission",
+            {
+              submission_id: value.id,
+              approve: value.decision === "approve",
+            },
+          );
     if (result.error)
       return {
         message:

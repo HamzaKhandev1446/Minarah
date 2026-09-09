@@ -55,7 +55,7 @@ async function saveDraft(target = mosque, entries = prayers) {
 
 beforeAll(async () => {
   await db.exec(`create role anon nologin; create role authenticated nologin; create schema auth;
-    create table auth.users(id uuid primary key);
+    create table auth.users(id uuid primary key, email text, email_confirmed_at timestamptz);
     create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
     grant usage on schema public, auth to anon, authenticated;
     grant execute on function auth.uid() to anon, authenticated;`);
@@ -64,6 +64,8 @@ beforeAll(async () => {
     "202609070002_schedule_transactions.sql",
     "202609070003_public_distance.sql",
     "202609080004_onboarding_and_qr.sql",
+    "202609090005_registration_moderators.sql",
+    "202609090006_registration_classification.sql",
   ])
     await db.exec(await readFile(`supabase/migrations/${file}`, "utf8"));
   await db.exec(await readFile("supabase/seed.sql", "utf8"));
@@ -81,6 +83,323 @@ afterAll(async () => {
 });
 
 describe("migrations, PostGIS and row-level security", () => {
+  it("reviews representatives, activates two confirmed nominees, and restricts moderators to daily-time drafts", async () => {
+    const owner = "70000000-0000-4000-8000-000000000001";
+    const mod = "70000000-0000-4000-8000-000000000002";
+    const mod2 = "70000000-0000-4000-8000-000000000003";
+    const reviewer = "70000000-0000-4000-8000-000000000004";
+    for (const [id, email] of [
+      [owner, "owner@example.test"],
+      [mod, "mod@example.test"],
+      [mod2, "mod2@example.test"],
+      [reviewer, "reviewer@example.test"],
+    ])
+      await db.query(
+        "insert into auth.users(id,email,email_confirmed_at) values($1,$2,now())",
+        [id, email],
+      );
+    await db.query("insert into public.platform_admins(user_id) values($1)", [
+      reviewer,
+    ]);
+    const payload = {
+      name: "Registration acceptance mosque",
+      addressLine: "Test address",
+      city: "Registration city",
+      countryCode: "PK",
+      latitude: 11,
+      longitude: 11,
+      timezone: "Asia/Karachi",
+    };
+    const representative = {
+      sect: "Hanafi",
+      subSect: "Representative supplied",
+      representativeName: "Owner name",
+      representativeRole: "Imam",
+      representativeContact: "test phone",
+      authority: "Authorized representative for this test mosque.",
+      moderators: [
+        { name: "Moderator one", email: "mod@example.test" },
+        { name: "Moderator two", email: "mod2@example.test" },
+      ],
+    };
+    await asRole("anon", null, async () => {
+      await expect(
+        db.query("select public.register_mosque($1,$2)", [
+          payload,
+          representative,
+        ]),
+      ).rejects.toThrow();
+    });
+    const submission = await asRole("authenticated", owner, async () => {
+      await expect(
+        db.query("select public.register_mosque($1,$2)", [
+          payload,
+          { ...representative, sect: "invalid" },
+        ]),
+      ).rejects.toThrow();
+      await expect(
+        db.query("select public.register_mosque($1,$2)", [
+          payload,
+          {
+            ...representative,
+            moderators: [
+              ...representative.moderators,
+              { name: "Third", email: "third@example.test" },
+            ],
+          },
+        ]),
+      ).rejects.toThrow();
+      return (
+        await db.query<{ id: string }>(
+          "select public.register_mosque($1,$2) as id",
+          [payload, representative],
+        )
+      ).rows[0]!.id;
+    });
+    expect(
+      (
+        await db.query(
+          "select sect,sub_sect from public.mosque_registrations where submission_id=$1",
+          [submission],
+        )
+      ).rows,
+    ).toEqual([{ sect: "Hanafi", sub_sect: "Representative supplied" }]);
+    await asRole("authenticated", mod, async () => {
+      expect(
+        (await db.query("select * from public.mosque_registrations")).rows,
+      ).toHaveLength(0);
+      expect(
+        (await db.query("select * from public.pending_moderator_nominations()"))
+          .rows,
+      ).toHaveLength(0);
+      await expect(
+        db.query("select public.review_mosque_registration($1,true)", [
+          submission,
+        ]),
+      ).rejects.toThrow();
+    });
+    const target = await asRole(
+      "authenticated",
+      reviewer,
+      async () =>
+        (
+          await db.query<{ id: string }>(
+            "select public.review_mosque_registration($1,true) as id",
+            [submission],
+          )
+        ).rows[0]!.id,
+    );
+    await asRole("authenticated", owner, async () => {
+      expect(
+        (
+          await db.query(
+            "select role from public.mosque_members where mosque_id=$1",
+            [target],
+          )
+        ).rows,
+      ).toEqual([{ role: "owner" }]);
+      const draft = await saveDraft(target);
+      await db.query("select public.publish_schedule($1,1)", [draft]);
+    });
+    const invitation = await asRole(
+      "authenticated",
+      mod,
+      async () =>
+        (
+          await db.query<{ id: string }>(
+            "select * from public.pending_moderator_nominations()",
+          )
+        ).rows[0]!.id,
+    );
+    await asRole("authenticated", stranger, async () => {
+      await expect(
+        db.query("select public.accept_moderator_nomination($1)", [invitation]),
+      ).rejects.toThrow();
+    });
+    await db.query(
+      "update auth.users set email_confirmed_at=null where id=$1",
+      [mod],
+    );
+    await asRole("authenticated", mod, async () => {
+      await expect(
+        db.query("select public.accept_moderator_nomination($1)", [invitation]),
+      ).rejects.toThrow();
+    });
+    await db.query(
+      "update auth.users set email_confirmed_at=now() where id=$1",
+      [mod],
+    );
+    await asRole("authenticated", mod, async () => {
+      await db.query("select public.accept_moderator_nomination($1)", [
+        invitation,
+      ]);
+      await expect(
+        db.query("select public.accept_moderator_nomination($1)", [invitation]),
+      ).rejects.toThrow();
+      expect(
+        (
+          await db.query("select public.can_manage_mosque($1) as allowed", [
+            target,
+          ])
+        ).rows,
+      ).toEqual([{ allowed: false }]);
+      const draft = await saveDraft(
+        target,
+        prayers.map((entry) =>
+          entry.prayer === "isha" ? { ...entry, localTime: "21:15" } : entry,
+        ),
+      );
+      await expect(
+        db.query("select public.publish_schedule($1,1)", [draft]),
+      ).rejects.toThrow();
+      await expect(
+        db.query("select public.ensure_mosque_qr($1)", [target]),
+      ).rejects.toThrow();
+      await expect(
+        db.query(
+          "select public.save_schedule_draft($1,'2031-01-01','2031-01-31',$2)",
+          [target, prayers],
+        ),
+      ).rejects.toThrow();
+      await expect(
+        db.query(
+          "select public.save_schedule_draft($1,'2030-01-01','2030-01-31',$2,'[]','[]',$3,1)",
+          [target, prayers, draft],
+        ),
+      ).rejects.toThrow();
+    });
+    await asRole("authenticated", mod2, async () => {
+      const id = (
+        await db.query<{ id: string }>(
+          "select * from public.pending_moderator_nominations()",
+        )
+      ).rows[0]!.id;
+      await db.query("select public.accept_moderator_nomination($1)", [id]);
+    });
+    expect(
+      (
+        await db.query(
+          "select role from public.mosque_members where mosque_id=$1 and role='moderator'",
+          [target],
+        )
+      ).rows,
+    ).toHaveLength(2);
+    await asRole("anon", null, async () => {
+      expect(
+        (
+          await db.query(
+            "select * from public.jamaat_schedules where mosque_id=$1 and status='draft'",
+            [target],
+          )
+        ).rows,
+      ).toHaveLength(0);
+    });
+  });
+  it("passes the operator's read-only release audit", async () => {
+    await db.exec(await readFile("supabase/verify-release.sql", "utf8"));
+  });
+  it("reviews pending submissions and claims with platform-only membership grants", async () => {
+    const payload = {
+      name: "Review Test Mosque",
+      addressLine: "12 Test Street",
+      city: "Review City",
+      countryCode: "PK",
+      latitude: 10,
+      longitude: 10,
+      timezone: "Asia/Karachi",
+    };
+    const submission = await asRole("anon", null, async () => {
+      const result = await db.query<{ id: string }>(
+        "select public.submit_mosque($1::jsonb) as id",
+        [JSON.stringify(payload)],
+      );
+      await expect(
+        db.query("select public.submit_mosque($1::jsonb)", [
+          JSON.stringify(payload),
+        ]),
+      ).rejects.toThrow("already pending");
+      return result.rows[0]!.id;
+    });
+    await asRole("authenticated", stranger, async () => {
+      await expect(
+        db.query("select public.review_mosque_submission($1, true)", [
+          submission,
+        ]),
+      ).rejects.toThrow("Platform administrator required");
+    });
+    await db.query("insert into public.platform_admins(user_id) values ($1)", [
+      member,
+    ]);
+    try {
+      const created = await asRole("authenticated", member, async () => {
+        const result = await db.query<{ id: string }>(
+          "select public.review_mosque_submission($1, true) as id",
+          [submission],
+        );
+        await expect(
+          db.query("select public.review_mosque_submission($1, true)", [
+            submission,
+          ]),
+        ).rejects.toThrow("already reviewed");
+        return result.rows[0]!.id;
+      });
+      expect(
+        (
+          await db.query(
+            "select * from public.mosque_members where mosque_id = $1",
+            [created],
+          )
+        ).rows,
+      ).toHaveLength(0);
+      expect(
+        (
+          await db.query<{ verification_status: string }>(
+            "select verification_status from public.mosques where id = $1",
+            [created],
+          )
+        ).rows[0]!.verification_status,
+      ).toBe("unverified");
+      const claim = await asRole("authenticated", stranger, async () => {
+        await expect(
+          db.query("select public.ensure_mosque_qr($1)", [created]),
+        ).rejects.toThrow("membership required");
+        return (
+          await db.query<{ id: string }>(
+            "select public.submit_mosque_claim($1, 'Test Person', 'test@example.test', 'Secretary', 'I represent this mosque.') as id",
+            [created],
+          )
+        ).rows[0]!.id;
+      });
+      await asRole("authenticated", member, () =>
+        db.query("select public.review_mosque_claim($1, true, 'admin')", [
+          claim,
+        ]),
+      );
+      await asRole("authenticated", stranger, async () => {
+        expect(
+          (
+            await db.query<{ allowed: boolean }>(
+              "select public.can_manage_mosque($1) as allowed",
+              [created],
+            )
+          ).rows[0]!.allowed,
+        ).toBe(true);
+        const first = await db.query<{ code: string }>(
+          "select public.ensure_mosque_qr($1) as code",
+          [created],
+        );
+        const second = await db.query<{ code: string }>(
+          "select public.ensure_mosque_qr($1) as code",
+          [created],
+        );
+        expect(first.rows[0]!.code).toBe(second.rows[0]!.code);
+      });
+    } finally {
+      await db.query("delete from public.platform_admins where user_id = $1", [
+        member,
+      ]);
+    }
+  });
   it("loads ten synthetic mosques and keeps all app tables under RLS", async () => {
     expect(
       (

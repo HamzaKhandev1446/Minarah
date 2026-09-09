@@ -14,10 +14,13 @@ test("granted location stays transient and carries distance into the detail page
       },
     }),
   );
-  await page.goto("/?mode=demo");
+  await page.goto("/?mode=demo&view=map");
   await page.getByRole("button", { name: "Use my location" }).click();
   await expect(page.getByRole("article")).toHaveCount(10);
-  await page.getByRole("link", { name: "Cedar Community Mosque" }).click();
+  await page
+    .getByRole("button", { name: "Open Cedar Community Mosque timetable" })
+    .click();
+  await page.getByRole("link", { name: "Mosque details & directions" }).click();
   await expect(page).toHaveURL(/mosques\/sample-cedar\?mode=demo/);
   await expect(page.getByRole("article")).toContainText("0 m away");
   expect(new URL(page.url()).searchParams.has("latitude")).toBe(false);
@@ -85,7 +88,7 @@ test("unsupported, unavailable and timed-out location leave manual search availa
       },
     });
   });
-  await page.goto("/?mode=demo");
+  await page.goto("/?mode=demo&view=map");
   await page.getByRole("button", { name: "Use my location" }).click();
   await expect(
     page.getByText("Your position is unavailable.", { exact: false }),
@@ -109,7 +112,7 @@ test("search, open, follow, reload, return and unfollow without login", async ({
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/?mode=demo");
+  await page.goto("/?mode=demo&view=map");
   await page.keyboard.press("Tab");
   await expect(
     page.getByRole("link", { name: "Skip to content" }),
@@ -121,7 +124,10 @@ test("search, open, follow, reload, return and unfollow without login", async ({
     path: test.info().outputPath("directory.png"),
     fullPage: true,
   });
-  await page.getByRole("link", { name: "Cedar Community Mosque" }).click();
+  await page
+    .getByRole("button", { name: "Open Cedar Community Mosque timetable" })
+    .click();
+  await page.getByRole("link", { name: "Mosque details & directions" }).click();
   await expect(page).toHaveURL(/mosques\/sample-cedar\?mode=demo/);
   await expect(
     page.getByRole("heading", { name: "Today’s Jamaat" }),
@@ -136,7 +142,10 @@ test("search, open, follow, reload, return and unfollow without login", async ({
   await expect(
     page.getByRole("button", { name: "Following · Unfollow" }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Find mosques" }).click();
+  await page
+    .getByRole("main")
+    .getByRole("link", { name: "Find mosques" })
+    .click();
   await page
     .getByRole("button", { name: "Following (1)", exact: true })
     .click();
@@ -157,7 +166,7 @@ test("search, open, follow, reload, return and unfollow without login", async ({
 test("sample proximity is ordered and empty/manual search states work", async ({
   page,
 }) => {
-  await page.goto("/?mode=demo");
+  await page.goto("/?mode=demo&view=map");
   await page.getByRole("button", { name: "Try sample location" }).click();
   await expect(page.getByRole("article")).toHaveCount(10);
   await expect(page.getByRole("article").first()).toContainText(
@@ -169,7 +178,7 @@ test("sample proximity is ordered and empty/manual search states work", async ({
     .fill("No matching mosque");
   await page.getByRole("button", { name: "Search", exact: true }).click();
   await expect(
-    page.getByText("No mosques found.", { exact: false }),
+    page.getByText("No registered mosques found.", { exact: false }),
   ).toBeVisible();
 });
 
@@ -184,7 +193,7 @@ test("denied location recovers through manual search", async ({ page }) => {
       },
     }),
   );
-  await page.goto("/?mode=demo");
+  await page.goto("/?mode=demo&view=map");
   await page.getByRole("button", { name: "Use my location" }).click();
   await expect(
     page.getByText("Location permission was denied.", { exact: false }),
@@ -228,7 +237,7 @@ test("live API failure stays visible without synthetic replacement", async ({
       }),
     }),
   );
-  await page.goto("/");
+  await page.goto("/?view=map");
   await page.getByLabel("Search by mosque name or city").fill("Cedar");
   await page.getByRole("button", { name: "Search", exact: true }).click();
   await expect(page.getByRole("main").getByRole("alert")).toContainText(

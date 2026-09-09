@@ -13,7 +13,14 @@ export default async function ManageMosque({
   searchParams: Promise<{ schedule?: string }>;
 }) {
   const { mosqueId } = await params;
-  const { db } = await requireMember(mosqueId);
+  const { db } = await requireMember(mosqueId, true);
+  const { data: canManage, error: permissionError } = await db.rpc(
+    "can_manage_mosque",
+    { target_mosque: mosqueId },
+  );
+  if (permissionError)
+    throw new Error("Your timetable permissions could not be loaded.");
+  const limited = canManage !== true;
   const { data: mosqueData, error: mosqueError } = await db
     .from("mosques")
     .select("name,slug,timezone")
@@ -85,13 +92,15 @@ export default async function ManageMosque({
       </p>
       <div className="actions">
         <Link href={`/mosques/${mosque.slug}`}>Public mosque page</Link>
-        <Link href={`/admin/${mosqueId}/qr`}>View Mosque QR</Link>
-        <Link
-          className="button secondary"
-          href={`/admin/${mosqueId}?schedule=new`}
-        >
-          New effective period
-        </Link>
+        {!limited && <Link href={`/admin/${mosqueId}/qr`}>View Mosque QR</Link>}
+        {!limited && (
+          <Link
+            className="button secondary"
+            href={`/admin/${mosqueId}?schedule=new`}
+          >
+            New effective period
+          </Link>
+        )}
       </div>
       <details>
         <summary>Choose a schedule or draft</summary>
@@ -110,6 +119,7 @@ export default async function ManageMosque({
         mosqueId={mosqueId}
         initial={initial}
         localDate={date}
+        limited={limited}
       />
       <h2>Publication history</h2>
       {!audit.length && <p>No publication changes recorded yet.</p>}

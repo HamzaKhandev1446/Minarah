@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { DataMode, DiscoveryResponse } from "@/domain/discovery";
 import { fetchDiscovery } from "@/lib/discovery-client";
-import { ScheduleCard } from "./schedule-card";
+import { MosqueBoard } from "./mosque-board";
 import { useClock } from "./use-clock";
 import { usePosition } from "./public-context";
 export function MosqueDetail({
@@ -58,7 +58,7 @@ export function MosqueDetail({
     };
   }, [refresh, invalidate, position]);
   return (
-    <main id="main" className="detail-shell">
+    <main id="main" className="board-shell">
       <Link className="back-link" href={mode === "demo" ? "/?mode=demo" : "/"}>
         ← Find mosques
       </Link>
@@ -86,7 +86,33 @@ export function MosqueDetail({
         </div>
       )}
       {data.results[0] ? (
-        <ScheduleCard result={data.results[0]} mode={mode} now={now} detail />
+        <>
+          <MosqueBoard result={data.results[0]} mode={mode} now={now} />
+          <section className="notice">
+            <h2>Visit the mosque</h2>
+            <p>
+              {data.results[0].mosque.addressLine},{" "}
+              {data.results[0].mosque.city}
+            </p>
+            {!data.results[0].mosque.isSynthetic && (
+              <a
+                className="button secondary"
+                rel="noreferrer"
+                target="_blank"
+                href={`https://www.google.com/maps/dir/?api=1&destination=${data.results[0].mosque.latitude},${data.results[0].mosque.longitude}`}
+              >
+                Get directions
+              </a>
+            )}
+            {!data.results[0].mosque.isSynthetic && (
+              <p>
+                <Link href={`/register-mosque?mosque=${slug}`}>
+                  Register this mosque for management
+                </Link>
+              </p>
+            )}
+          </section>
+        </>
       ) : (
         <p className="empty-state">
           This mosque is no longer available in the public directory.

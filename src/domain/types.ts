@@ -3,7 +3,7 @@ export type Prayer = (typeof PRAYERS)[number];
 export type CongregationPrayer = Prayer | "jumuah";
 export type VerificationStatus =
   "unverified" | "pending" | "verified" | "rejected";
-export type MemberRole = "owner" | "admin" | "editor";
+export type MemberRole = "owner" | "admin" | "editor" | "moderator";
 
 export interface Mosque {
   id: string;

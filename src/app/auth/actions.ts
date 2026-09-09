@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseConfig } from "@/lib/config";
-import { siteOrigin } from "@/server/qr";
+import { siteOrigin } from "@/lib/site-origin";
 export interface AuthState {
   message: string;
 }
@@ -19,21 +19,37 @@ export async function authenticate(
   const parsed = z
     .object({
       email: z.email().max(254),
-      password: z.string().min(8).max(128),
-      intent: z.enum(["login", "register"]),
+      password: z.string().max(128),
+      intent: z.enum(["login", "register", "resend"]),
     })
+    .refine((value) => value.intent === "resend" || value.password.length >= 8)
     .safeParse(Object.fromEntries(form));
   if (!parsed.success)
     return {
       message: "Enter a valid email and a password of 8–128 characters.",
     };
+  const next =
+    form.get("next") === "/register-mosque" ? "/register-mosque" : "/admin";
+  const callback = `${siteOrigin()}/auth/callback${next === "/register-mosque" ? "?next=/register-mosque" : ""}`;
   try {
     const db = await createClient();
+    if (parsed.data.intent === "resend") {
+      const { error } = await db.auth.resend({
+        type: "signup",
+        email: parsed.data.email,
+        options: { emailRedirectTo: callback },
+      });
+      return {
+        message: error
+          ? "A confirmation email could not be requested. Please wait before trying again."
+          : "If this address has an unconfirmed account, a new confirmation email has been requested. Check your inbox and spam folder.",
+      };
+    }
     if (parsed.data.intent === "register") {
       const { error } = await db.auth.signUp({
         email: parsed.data.email,
         password: parsed.data.password,
-        options: { emailRedirectTo: `${siteOrigin()}/auth/callback` },
+        options: { emailRedirectTo: callback },
       });
       return {
         message: error
@@ -55,7 +71,7 @@ export async function authenticate(
       message: "Authentication is temporarily unavailable. Please try again.",
     };
   }
-  redirect("/admin");
+  redirect(next);
 }
 export async function signOut() {
   const db = await createClient();

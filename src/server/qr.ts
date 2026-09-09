@@ -12,14 +12,7 @@ export function demoQrCode(slug: string) {
     .digest("base64url")
     .slice(0, 22);
 }
-export function siteOrigin() {
-  const url = new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-  );
-  if (!["http:", "https:"].includes(url.protocol))
-    throw new Error("Invalid site URL.");
-  return url.origin;
-}
+export { siteOrigin } from "@/lib/site-origin";
 export async function resolveQr(
   code: string,
   demo: boolean,

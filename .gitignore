@@ -12,3 +12,5 @@ supabase/.branches/
 test-results/
 playwright-report/
 *.log
+
+.vercel

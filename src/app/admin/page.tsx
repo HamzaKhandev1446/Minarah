@@ -2,6 +2,7 @@ import Link from "next/link";
 import { z } from "zod";
 import { requireUser } from "@/server/auth";
 import { signOut } from "@/app/auth/actions";
+import { NominationForm } from "@/components/nomination-form";
 export const dynamic = "force-dynamic";
 export default async function Admin() {
   const { db, user } = await requireUser();
@@ -22,10 +23,31 @@ export default async function Admin() {
     )
     .parse(data);
   const { data: platform } = await db.rpc("is_platform_admin");
+  const nominationsResult = await db.rpc("pending_moderator_nominations");
+  const nominations = nominationsResult.error
+    ? []
+    : z
+        .array(z.object({ id: z.uuid(), mosque_name: z.string() }))
+        .parse(nominationsResult.data);
   return (
     <main id="main" className="directory-shell">
       <h1>My mosques</h1>
       <p>Signed in as {user.email}</p>
+      {nominationsResult.error && (
+        <p role="alert">
+          Moderator nominations could not be loaded. Try again later.
+        </p>
+      )}
+      {nominations.map((nomination) => (
+        <section className="notice" key={nomination.id}>
+          <h2>{nomination.mosque_name}</h2>
+          <p>
+            You have been nominated to edit daily prayer-time drafts. The owner
+            publishes changes.
+          </p>
+          <NominationForm id={nomination.id} />
+        </section>
+      ))}
       <div className="actions">
         <form action={signOut}>
           <button className="button secondary">Sign out</button>
@@ -53,9 +75,11 @@ export default async function Admin() {
                 <Link className="button" href={`/admin/${item.mosques.id}`}>
                   Manage schedule
                 </Link>{" "}
-                <Link href={`/admin/${item.mosques.id}/qr`}>
-                  View Mosque QR
-                </Link>
+                {item.role !== "moderator" && (
+                  <Link href={`/admin/${item.mosques.id}/qr`}>
+                    View Mosque QR
+                  </Link>
+                )}
               </article>
             ),
         )}

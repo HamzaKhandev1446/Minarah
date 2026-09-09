@@ -6,7 +6,7 @@ export function ReviewForm({
   kind,
 }: {
   id: string;
-  kind: "claim" | "submission";
+  kind: "claim" | "submission" | "registration";
 }) {
   const [state, action, pending] = useActionState(reviewRecord, {
     message: "",
@@ -28,7 +28,9 @@ export function ReviewForm({
       <p>
         {kind === "claim"
           ? "Approval grants management access and verifies the mosque. Confirm the claimant’s authority first."
-          : "Approval adds an unverified public mosque. It grants no management access."}
+          : kind === "registration"
+            ? "Confirm the representative’s authority. Approval verifies the mosque, grants owner access and makes the two limited moderator nominations available for acceptance."
+            : "Approval adds an unverified public mosque. It grants no management access."}
       </p>
       <div className="actions">
         <button
@@ -39,7 +41,9 @@ export function ReviewForm({
         >
           {kind === "claim"
             ? "Approve claim & verify mosque"
-            : "Approve mosque submission"}
+            : kind === "registration"
+              ? "Approve registration & owner"
+              : "Approve mosque submission"}
         </button>
         <button
           className="button secondary"

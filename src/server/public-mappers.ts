@@ -91,10 +91,16 @@ function convertSchedule(
         label: j.label,
       }))
       .sort((a, b) => a.position - b.position),
-    overrides: row.schedule_overrides.map((o) => ({
-      prayer: o.prayer,
-      localTime: o.local_time,
-      localDate: o.local_date,
-    })),
+    overrides: row.schedule_overrides
+      .map((o) => ({
+        prayer: o.prayer,
+        localTime: o.local_time,
+        localDate: o.local_date,
+      }))
+      .sort(
+        (a, b) =>
+          a.localDate.localeCompare(b.localDate) ||
+          a.prayer.localeCompare(b.prayer),
+      ),
   };
 }

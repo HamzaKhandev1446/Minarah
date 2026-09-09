@@ -4,6 +4,7 @@ import { PublicProvider } from "@/components/public-context";
 import { PwaInstall } from "@/components/pwa";
 import Link from "next/link";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 
 export const metadata: Metadata = {
   title: "Minarah — Jamaat, together",
@@ -32,9 +33,9 @@ export default function RootLayout({
             <Brand />
             <span className="header-note">Your mosque. Your community.</span>
             <nav aria-label="Main navigation" className="main-nav">
-              <Link href="/">Find mosques</Link>
-              <Link href="/submit">Add Mosque</Link>
-              <Link href="/admin">Manage mosque</Link>
+              <Link href="/">Map & discover</Link>
+              <Link href="/?view=following">Following</Link>
+              <Link href="/register-mosque">Register your mosque</Link>
             </nav>
           </div>
         </header>

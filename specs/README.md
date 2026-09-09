@@ -7,7 +7,7 @@ This folder is the entry point for spec-driven development by people and AI agen
 1. [Current status](STATUS.md): what exists, what is verified and what comes next.
 2. [Product requirements](product.md): Phase 1 scope and stable requirement IDs.
 3. [Architecture decisions](architecture.md): domain, data and security rules.
-4. The relevant feature spec, starting with [Milestone 3: public read experience](features/003-public-read.md).
+4. The relevant feature spec: current work is [Following, maps and registration](features/010-following-maps-registration.md); prior MVP work is in [Milestones 4–9](features/004-009-mvp-completion.md) and public-read behavior is in [Milestone 3](features/003-public-read.md).
 5. [Original build brief](phase-1-brief.md) when full source requirements are needed.
 
 The original brief is preserved as a historical source. Its initial audit approval checkpoint has already been satisfied. The user's latest instructions take precedence; neither a future feature spec nor the roadmap is an instruction to implement that feature immediately.

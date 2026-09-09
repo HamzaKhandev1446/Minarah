@@ -21,7 +21,8 @@ export function canManageMosque(
     membership.userId === userId &&
     membership.mosqueId === mosqueId &&
     membership.status === "active" &&
-    ["owner", "admin", "editor"].includes(membership.role) &&
+    (["owner", "admin", "editor"].includes(membership.role) ||
+      (membership.role === "moderator" && operation === "edit_schedule")) &&
     ["edit_schedule", "publish_schedule", "view_qr"].includes(operation),
   );
 }

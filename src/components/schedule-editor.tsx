@@ -7,10 +7,12 @@ export function ScheduleEditor({
   mosqueId,
   initial,
   localDate,
+  limited = false,
 }: {
   mosqueId: string;
   initial: JamaatSchedule | null;
   localDate: string;
+  limited?: boolean;
 }) {
   const [values, setValues] = useState({
     mosqueId,
@@ -36,7 +38,14 @@ export function ScheduleEditor({
       <input type="hidden" name="payload" value={JSON.stringify(values)} />
       <input type="hidden" name="draftId" value={state.draftId ?? ""} />
       <input type="hidden" name="revision" value={state.revision ?? ""} />
-      <fieldset disabled={pending}>
+      {limited && (
+        <p className="notice">
+          Moderator access: edit daily prayer times in an existing period and
+          save a draft. The owner reviews and publishes it. Friday sessions,
+          overrides and period dates are read-only.
+        </p>
+      )}
+      <fieldset disabled={pending || limited}>
         <legend>Effective period</legend>
         <div className="form-grid">
           <label>
@@ -93,7 +102,7 @@ export function ScheduleEditor({
           ))}
         </div>
       </fieldset>
-      <fieldset disabled={pending}>
+      <fieldset disabled={pending || limited}>
         <legend>Friday Jumu’ah sessions</legend>
         {values.jumuahSessions.map((session, index) => (
           <div className="form-row" key={index}>
@@ -150,7 +159,7 @@ export function ScheduleEditor({
           Add Jumu’ah session
         </button>
       </fieldset>
-      <fieldset disabled={pending}>
+      <fieldset disabled={pending || limited}>
         <legend>Date overrides</legend>
         {values.overrides.map((override, index) => (
           <div className="override-row" key={index}>
@@ -258,7 +267,7 @@ export function ScheduleEditor({
           className="button"
           name="intent"
           value="publish"
-          disabled={pending}
+          disabled={pending || limited}
         >
           {pending ? "Saving…" : "Publish Changes"}
         </button>

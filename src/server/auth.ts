@@ -10,12 +10,22 @@ export async function requireUser() {
   if (error || !data.user) redirect("/auth/login");
   return { db, user: data.user };
 }
-export async function requireMember(mosqueId: string) {
+export async function requireMember(mosqueId: string, timetableOnly = false) {
   if (!z.uuid().safeParse(mosqueId).success) notFound();
   const session = await requireUser();
-  const { data, error } = await session.db.rpc("can_manage_mosque", {
-    target_mosque: mosqueId,
-  });
+  let { data, error } = await session.db.rpc(
+    timetableOnly ? "can_edit_timetable" : "can_manage_mosque",
+    {
+      target_mosque: mosqueId,
+    },
+  );
+  // During a rolling schema deployment, retain the existing manager check.
+  // Only a missing new RPC permits this fallback; all other failures deny access.
+  if (timetableOnly && error?.code === "PGRST202") {
+    ({ data, error } = await session.db.rpc("can_manage_mosque", {
+      target_mosque: mosqueId,
+    }));
+  }
   if (error || data !== true) notFound();
   return session;
 }

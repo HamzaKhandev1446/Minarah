@@ -14,19 +14,23 @@ export async function saveSchedule(
   form: FormData,
 ): Promise<EditorState> {
   const mosqueId = z.uuid().parse(form.get("mosqueId"));
-  const { db } = await requireMember(mosqueId);
+  const { db } = await requireMember(
+    mosqueId,
+    form.get("intent") !== "publish",
+  );
   let draftId: string | null = null;
   let revision: number | null = null;
   try {
+    // Preserve the edit identity even when the schedule payload is invalid.
+    draftId = form.get("draftId") ? z.uuid().parse(form.get("draftId")) : null;
+    revision = form.get("revision")
+      ? z.coerce.number().int().positive().parse(form.get("revision"))
+      : null;
     const payload = scheduleDraftSchema.parse({
       ...JSON.parse(String(form.get("payload"))),
       mosqueId,
     });
     const intent = z.enum(["save", "publish"]).parse(form.get("intent"));
-    draftId = form.get("draftId") ? z.uuid().parse(form.get("draftId")) : null;
-    revision = form.get("revision")
-      ? z.coerce.number().int().positive().parse(form.get("revision"))
-      : null;
     const { data, error } = await db.rpc("save_schedule_draft", {
       target_mosque: mosqueId,
       effective_start: payload.effectiveFrom,
@@ -47,14 +51,11 @@ export async function saveSchedule(
         revision,
         published: false,
       };
+    // The RPC creates revision 1 or increments the expected revision once.
+    // A subsequent SELECT could observe another editor's save and accidentally
+    // authorize publishing changes that this editor has never reviewed.
+    revision = draftId === null ? 1 : revision! + 1;
     draftId = z.uuid().parse(data);
-    const saved = await db
-      .from("jamaat_schedules")
-      .select("revision")
-      .eq("id", draftId)
-      .single();
-    if (saved.error) throw new Error("Unable to confirm saved draft.");
-    revision = z.object({ revision: z.number() }).parse(saved.data).revision;
     if (intent === "publish") {
       const publication = await db.rpc("publish_schedule", {
         target_schedule: draftId,
