@@ -1,5 +1,9 @@
 # Architecture and accepted decisions
 
+## Public map provider — September 16, 2026
+
+MapLibre GL JS and OpenFreeMap Positron replace Google Maps and Leaflet. No map API key or billing account is required. Geography rendering never supplies Jamaat times. Registration shares click/drag selection; Photon search remains separate. Keep attribution, handle WebGL/network failures, and never cache map regions for offline use. Hosting is best-effort rather than guaranteed.
+
 These decisions describe the implemented foundation and intended extensions. See [status](STATUS.md) for verification boundaries and the [setup guide](../README.md) for runtime and dependency requirements. Inspect `package.json` and its lockfile before using dependency APIs.
 
 ## ARC-01 — application boundaries
@@ -75,3 +79,7 @@ Use explicit, bounded Photon searches (five results, timeout, abort on supersedi
 Map places are separate from registered mosque UUIDs and published schedules. Explicit favourite actions persist up to 50 validated provider places locally; they never imply a linked timetable or verification. Registration links may carry selected mosque coordinates, while visitor discovery coordinates continue to use POST/transient state. A registration pin is kept in session storage, without passwords/contact details. Auth return destinations accept only the fixed registration route or existing admin default.
 
 Migration six stores representative-provided sect and optional sub-sect in the private registration record, with database constraints and platform review visibility. It does not infer classification from location/name or grant any access. Existing role, publication and review transactions are preserved.
+
+# Ongoing timetable publication — September 16, 2026
+
+The user's latest schedule model keeps times active until changed. `effective_to = NULL` expresses an ongoing timetable rather than a fabricated far-future expiry. `published_at` remains server-owned freshness metadata and changes only at publication. Existing bounded data remains compatible. New ongoing publication atomically archives overlapping bundles and audits each previous snapshot; public and admin mappers/resolvers explicitly accept NULL end dates. The database-owner pilot script and authenticated publication share a private transaction helper, with execute denied to application roles. Date range fields remain internal compatibility/history data and are removed from the normal editor.

@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Brand } from "@/components/brand";
 import { PublicProvider } from "@/components/public-context";
-import { PwaInstall } from "@/components/pwa";
-import Link from "next/link";
+import { AppNavigation } from "@/components/app-navigation";
 import "./globals.css";
-import "leaflet/dist/leaflet.css";
+import "maplibre-gl/dist/maplibre-gl.css";
+import "./public-mobile.css";
 
 export const metadata: Metadata = {
   title: "Minarah — Jamaat, together",
@@ -31,20 +31,13 @@ export default function RootLayout({
         <header className="site-header">
           <div className="header-inner">
             <Brand />
-            <span className="header-note">Your mosque. Your community.</span>
-            <nav aria-label="Main navigation" className="main-nav">
-              <Link href="/">Map & discover</Link>
-              <Link href="/?view=following">Following</Link>
-              <Link href="/register-mosque">Register your mosque</Link>
-            </nav>
+            <AppNavigation />
           </div>
         </header>
         <PublicProvider>{children}</PublicProvider>
         <footer className="site-footer">
           <Brand />
           <p>Closer to your mosque. Together in prayer.</p>
-          <span>Minarah · Phase 1</span>
-          <PwaInstall />
         </footer>
       </body>
     </html>

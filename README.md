@@ -6,6 +6,8 @@ Mosque-published Jamaat information. Phase 1 connects a mosque's published sched
 
 ## Current milestone
 
+Local work now uses MapLibre/OpenFreeMap with no map key. Run `npm run dev` or `npm run build` so the matching map worker assets are prepared automatically. The older deployment notes below describe the previous release. See [OpenFreeMap](specs/features/014-openfreemap.md). The two requested Parsa Citi records are prepared in `supabase/add-parsa-citi-mosques.sql`, awaiting privileged SQL execution; no published times are invented.
+
 Use `hamzakhan.dev1446@gmail.com` for project services and deployment. Verify the authenticated account and project ownership before changing hosted resources.
 
 The app is deployed at **[minarah-seven.vercel.app](https://minarah-seven.vercel.app)**. Home and PWA launch open the map, including before any search results exist. Search returns registered mosque markers and separately labelled map-provider places; either can be saved in Following. Registered mosque boards show published times. Map & discover uses Leaflet/OpenStreetMap; directions open Google Maps. See [Following, maps and registration](specs/features/010-following-maps-registration.md).
@@ -46,7 +48,7 @@ Browser checks run separately with `npm run build` followed by `npm run test:e2e
 
 ## Supabase setup
 
-Apply all six versioned migrations, including `202609090005_registration_moderators.sql` and `202609090006_registration_classification.sql`, before using the complete application. `/api/discovery` accepts bounded POST requests so visitor coordinates stay out of URL query strings. Application code does not persist or log those coordinates; configure hosting observability not to capture request bodies containing location data.
+Apply all seven versioned migrations in order, through `202609160007_ongoing_schedules.sql`, before using the complete application. Timetables now stay active until changed; no end date is required in the editor. Publishing updates Last published while draft saves do not. For the supplied Block G times, run `supabase/publish-parsa-citi-block-g-times.sql` as the database owner after migrations and the mosque location import. `/api/discovery` accepts bounded POST requests so visitor coordinates stay out of URL query strings. Application code does not persist or log those coordinates; configure hosting observability not to capture request bodies containing location data.
 
 Local Supabase requires Docker. Start Docker, then:
 
@@ -74,7 +76,7 @@ Synthetic data is defined in `src/data/pilot.json`. After changing it, run `npm 
 - An exact effective period can be replaced. A different overlapping period fails and rolls back. Published revisions are immutable through application APIs. Future editors should guide administrators to use exact-period replacement or non-overlapping new periods.
 - Profiles, claims, submissions and platform-role tables use RLS. Validated RPCs accept pending submissions/claims; platform-only review RPCs grant membership only for approved claims. Public submissions have a bounded hourly queue and duplicate gate; authenticated claims have a daily limit.
 - QR tokens are UUID-derived 22-character URL-safe random values. Anonymous users can only call the narrow `resolve_qr` function, not list tokens or creator IDs. Resolving codes does not mutate follows or record personal scan data.
-- `nearby_mosques` uses indexed `ST_DWithin` and `ST_Distance`, validates coordinates, limits radius to 50 km and returns at most 50 rows. The server's default is configured with `NEARBY_RADIUS_METERS` (5000). Manual search escapes wildcard input and has a trigram index.
+- `nearby_mosques` uses indexed `ST_DWithin` and `ST_Distance`, validates coordinates, limits database calls to 50 km and returns at most 50 rows. The public pilot server caps its nearby radius at 0.8 km and defaults to `NEARBY_RADIUS_METERS=800`. Manual search escapes wildcard input and has a trigram index.
 
 An operator can add a confirmed Supabase Auth user to `platform_admins` through a privileged SQL session. Never derive that role from user-editable metadata. For local admin testing, insert a `mosque_members` record for a confirmed test user and a seeded mosque. The seed deliberately creates no passwords or privileged accounts.
 

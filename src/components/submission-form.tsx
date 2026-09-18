@@ -1,5 +1,7 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import Link from "next/link";
+import { UiIcon } from "./ui-icon";
 import { submitMosque } from "@/app/submit/actions";
 import type { SelectedPlace } from "@/lib/place-search";
 import { SECTS } from "@/domain/onboarding";
@@ -16,6 +18,29 @@ export function SubmissionForm({
     message: "",
     success: false,
   });
+  useEffect(() => {
+    if (state.success && registration) {
+      try {
+        sessionStorage.removeItem("minarah:registration-location:v1");
+      } catch {
+        /* Submission success is independent of browser storage. */
+      }
+    }
+  }, [state.success, registration]);
+  if (state.success)
+    return (
+      <section className="submission-success" role="status">
+        <span className="confirmed-icon">
+          <UiIcon name="check" size={28} />
+        </span>
+        <p className="eyebrow">Registration received</p>
+        <h2>You’re one step closer.</h2>
+        <p>{state.message}</p>
+        <Link className="button" href="/admin">
+          Go to my mosques <UiIcon name="arrow" size={18} />
+        </Link>
+      </section>
+    );
   return (
     <form action={action} className="form-stack">
       <input
@@ -23,68 +48,7 @@ export function SubmissionForm({
         name="registration"
         value={registration ? "1" : "0"}
       />
-      {registration && (
-        <fieldset disabled={pending || state.success}>
-          <legend>Your details</legend>
-          <label>
-            Your name
-            <input
-              name="representativeName"
-              required
-              minLength={2}
-              maxLength={120}
-            />
-          </label>
-          <label>
-            Your role at the mosque
-            <input
-              name="representativeRole"
-              required
-              minLength={2}
-              maxLength={120}
-            />
-          </label>
-          <label>
-            Contact phone
-            <input
-              name="representativeContact"
-              required
-              minLength={3}
-              maxLength={250}
-            />
-          </label>
-          <label>
-            Explain your authority
-            <textarea
-              name="authority"
-              required
-              minLength={10}
-              maxLength={2000}
-            />
-          </label>
-          <p>
-            Optional: nominate up to two moderators. Each must confirm their own
-            account and accept the nomination after review. They can edit daily
-            prayer times in drafts; the owner publishes.
-          </p>
-          {[1, 2].map((index) => (
-            <div key={index}>
-              <label>
-                Moderator {index} name
-                <input name={`moderatorName${index}`} maxLength={120} />
-              </label>
-              <label>
-                Moderator {index} email
-                <input
-                  name={`moderatorEmail${index}`}
-                  type="email"
-                  maxLength={254}
-                />
-              </label>
-            </div>
-          ))}
-        </fieldset>
-      )}
+
       <fieldset disabled={pending || state.success}>
         <legend>Mosque details</legend>
         <label>
@@ -147,32 +111,41 @@ export function SubmissionForm({
               defaultValue={location?.countryCode}
             />
           </label>
-          <label>
-            Latitude
-            <input
-              name="latitude"
-              type="number"
-              required
-              min={-90}
-              max={90}
-              step="any"
-              value={location?.latitude}
-              readOnly={!!location}
-            />
-          </label>
-          <label>
-            Longitude
-            <input
-              name="longitude"
-              type="number"
-              required
-              min={-180}
-              max={180}
-              step="any"
-              value={location?.longitude}
-              readOnly={!!location}
-            />
-          </label>
+          {location ? (
+            <>
+              <input type="hidden" name="latitude" value={location.latitude} />
+              <input
+                type="hidden"
+                name="longitude"
+                value={location.longitude}
+              />
+            </>
+          ) : (
+            <>
+              <label>
+                Latitude
+                <input
+                  name="latitude"
+                  type="number"
+                  required
+                  min={-90}
+                  max={90}
+                  step="any"
+                />
+              </label>
+              <label>
+                Longitude
+                <input
+                  name="longitude"
+                  type="number"
+                  required
+                  min={-180}
+                  max={180}
+                  step="any"
+                />
+              </label>
+            </>
+          )}
         </div>
         <p className="muted">
           {location
@@ -180,8 +153,25 @@ export function SubmissionForm({
             : "Enter the mosque’s coordinates, not your personal location."}
         </p>
         <label>
-          IANA timezone
-          <input name="timezone" required placeholder="Asia/Karachi" />
+          Mosque timezone
+          <input
+            name="timezone"
+            required
+            placeholder="e.g. Asia/Karachi"
+            list="mosque-timezones"
+            defaultValue={
+              location?.countryCode === "PK" ? "Asia/Karachi" : undefined
+            }
+          />
+          <datalist id="mosque-timezones">
+            <option value="Asia/Karachi">Pakistan</option>
+            <option value="Asia/Kolkata">India</option>
+            <option value="Asia/Dhaka">Bangladesh</option>
+            <option value="Asia/Dubai">UAE</option>
+            <option value="Asia/Riyadh">Saudi Arabia</option>
+            <option value="Europe/London">United Kingdom</option>
+            <option value="America/New_York">US Eastern</option>
+          </datalist>
         </label>
         <label>
           Phone (optional)
@@ -207,6 +197,71 @@ export function SubmissionForm({
           </label>
         </div>
       </fieldset>
+      {registration && (
+        <fieldset disabled={pending || state.success}>
+          <legend>Your details</legend>
+          <label>
+            Your name
+            <input
+              name="representativeName"
+              required
+              minLength={2}
+              maxLength={120}
+            />
+          </label>
+          <label>
+            Your role at the mosque
+            <input
+              name="representativeRole"
+              required
+              minLength={2}
+              maxLength={120}
+            />
+          </label>
+          <label>
+            Contact phone
+            <input
+              name="representativeContact"
+              required
+              minLength={3}
+              maxLength={250}
+            />
+          </label>
+          <label>
+            Explain your authority
+            <textarea
+              name="authority"
+              required
+              minLength={10}
+              maxLength={2000}
+            />
+          </label>
+          <details className="optional-section">
+            <summary>Add moderators (optional)</summary>
+            <p>
+              Nominate up to two people to update daily prayer times. Each
+              confirms their own account and accepts after review. You keep
+              publication rights.
+            </p>
+            {[1, 2].map((index) => (
+              <div key={index}>
+                <label>
+                  Moderator {index} name
+                  <input name={`moderatorName${index}`} maxLength={120} />
+                </label>
+                <label>
+                  Moderator {index} email
+                  <input
+                    name={`moderatorEmail${index}`}
+                    type="email"
+                    maxLength={254}
+                  />
+                </label>
+              </div>
+            ))}
+          </details>
+        </fieldset>
+      )}
       <button
         className="button"
         disabled={pending || state.success || !configured}

@@ -33,7 +33,7 @@ export function resolveMosqueSchedule({
       schedule.mosqueId === mosqueId &&
       schedule.status === "published" &&
       schedule.effectiveFrom <= localDate &&
-      schedule.effectiveTo >= localDate,
+      (schedule.effectiveTo === null || schedule.effectiveTo >= localDate),
   );
   if (applicable.length > 1)
     throw new Error("Published schedule periods overlap.");
@@ -50,17 +50,22 @@ export function resolveMosqueSchedule({
   const overrides = base.overrides.filter(
     (override) => override.localDate === localDate,
   );
+  const replacesDhuhr =
+    Temporal.PlainDate.from(localDate).dayOfWeek === 5 &&
+    base.jumuahSessions.length > 0;
   return {
     mosqueId,
     localDate,
     scheduleId: base.id,
     publishedAt: base.publishedAt,
-    entries: base.entries.map((entry) => ({
-      ...entry,
-      localTime:
-        overrides.find((override) => override.prayer === entry.prayer)
-          ?.localTime ?? entry.localTime,
-    })),
+    entries: base.entries
+      .filter((entry) => !(replacesDhuhr && entry.prayer === "dhuhr"))
+      .map((entry) => ({
+        ...entry,
+        localTime:
+          overrides.find((override) => override.prayer === entry.prayer)
+            ?.localTime ?? entry.localTime,
+      })),
     jumuahSessions:
       Temporal.PlainDate.from(localDate).dayOfWeek === 5
         ? [...base.jumuahSessions].sort((a, b) => a.position - b.position)

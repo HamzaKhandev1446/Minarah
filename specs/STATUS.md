@@ -1,15 +1,105 @@
 # Implementation status
 
-Last updated: 2026-09-09. [PHASE_1_PLAN.md](../PHASE_1_PLAN.md) retains the historical audit and Milestones 1–3 reports.
+September 18 prayer-label correction: replaced literal question marks with Arabic قَدْ قَامَتِ الصَّلَاةُ in the live prayer cell. Friday Dhuhr now has a compact highlighted Jummah badge instead of Today is Jummah. All six columns remain rendered, including the separate last Jumuah entry; Friday Dhuhr uses published Jumuah time. Production build and TypeScript passed. Visual browser verification pending; no server started or restarted.
 
-## Map-first registration revision — September 9
+September 18 permanent Jumuah entry: retained the final Jumuah column on Fridays and made the board's bottom Jumuah section show the current published sessions every day. Friday Dhuhr still displays Jummah times with its Today is Jummah note. Published reference sessions are separate from Friday-only timing eligibility. All 30 schedule/discovery tests passed; browser visual verification pending. No server started or restarted.
+
+September 18 directions refinement: replaced the large labelled directions button with a small pin icon immediately before the mosque name. Kept the coordinate destination, accessible directions label, keyboard focus and 44px touch target. Available distance stays below the name. TypeScript passed; browser visual verification pending. No server started or restarted.
+
+September 18 mosque-header/Friday clarification: Dhuhr remains a visible timetable label, showing published Friday sessions with Today is Jummah on local Fridays. The resolver continues excluding ordinary Dhuhr from Friday countdowns. Removed city/country from the board header; added coordinate-based Get directions beside available distance. Gregorian/Hijri dates share a row and font size; Hijri uses Arabic. All 18 targeted calendar/schedule tests and production build/TypeScript passed. Browser visual verification remains pending. No server started or restarted.
+
+September 18 footer refinement: shared footer now contains only a compact, centered minaret and tagline. Removed Phase 1 and duplicate installation controls; installation remains in the public menu. Production build and TypeScript passed. Browser visual verification pending; no app server started or restarted.
+
+September 18 location search: added Add a new location above the saved-location dialog map, reusing the existing place-search service. Selecting a result opens the name-only save flow with its coordinates; manual map selection remains available on provider failures. Production build/TypeScript and targeted ESLint passed. Live provider and browser interactions remain unverified; no app server started.
+
+September 18 drawer styling: replaced plain menu buttons and nested installation boxes with grouped icon-led rows, descriptive labels, a branded header and consistent expandable settings. Production build (including TypeScript) and targeted zero-warning ESLint passed. No server started or restarted; browser visual and real-device installation checks remain unverified.
+
+September 18 dates: removed raw timezone text from mosque headers and added mosque-local civil Hijri dates beneath Gregorian dates, explicitly labelled estimated. Timezone-boundary unit test and production build passed. No server started or restarted.
+
+September 18 Friday correction: remove Dhuhr from shared resolved entries on local Fridays with published Jumuah sessions, preventing live map markers from selecting Dhuhr. Hide the Dhuhr timetable column/row for that day. All 30 schedule/discovery tests and production build passed. App server left under user control.
+
+September 18 saved-place selection: active coordinates select the matching saved-place card, shown with a deep-green border and light-green background. Selection is also exposed with aria-pressed. Production build and TypeScript passed; no app server was started or restarted.
+
+## Discovery recovery and text-free logo - September 17
+
+The local production process was blocked from Supabase by its network sandbox. Restarted with network access. Live localhost search and nearby POST requests returned HTTP 200 with both Parsa Citi mosques and radiusMeters 800. The served logo contains only the minaret/crescent, with no SVG text. Production build passed. Live Block G still has the older timetable; revised operator SQL remains unexecuted. Block A has no published timetable.
+
+## Ongoing timetables â€” September 16
+
+Implemented the latest instruction: no expiry date in the normal editor, and public freshness labelled Last published. Added migration seven for NULL end dates, compatible public lookup/resolution and a private audited publication helper. Block G operator SQL now starts today in Karachi and continues until changed, with no date placeholders. Existing dated schedules are not silently converted. Full suite passed 83 tests, followed by a final 18-test database run including one additional multi-period replacement case (84 distinct tests). Production build, strict TypeScript and zero-warning lint passed. Hosted migration and publication remain pending. See [ongoing timetables](features/016-ongoing-timetables.md).
+
+## Nearby radius refinement â€” September 16
+
+The public pilot map boundary and live nearby lookup now cap at 0.8 km (800 metres). The map is labelled â€œ0.8 km radiusâ€; manual name/city search remains available beyond the nearby radius. The underlying SQL function retains its broader validated 50 km capability for future configuration, while this appâ€™s server setting enforces the pilot cap.
+
+Verification: full suite passed 85 tests, strict TypeScript, zero-warning lint and the production build passed. Older environment values above 800 metres are safely capped rather than causing the server to fail.
+
+## Nearby timetable list â€” September 16
+
+Nearby results now remain visible as a list beneath the location prompt. Every result shows the mosque name, status/distance, Arabic prayer labels and six Jamaat columns, with a View mosque link and favourite control. The next/active time receives a green or red timing state: ten minutes before through start is nearly starting (green), up to five minutes after is in progress (red), and minutes five through seven are recently started (green). A small `Ù‚ÙŽØ¯Ù’ Ù‚ÙŽØ§Ù…ÙŽØªÙ Ø§Ù„ØµÙŽÙ‘Ù„ÙŽØ§Ø©Ù` label is shown above each timetable. The location button remains available. Targeted discovery tests and production build passed; updated browser coverage is pending.
+
+## Branded mosque map markers â€” September 16
+
+Registered-mosque map markers now show the Minarah minaret icon from the brand mark alongside the next Jamaat time. Provider-place markers and user/location pins remain distinct. Formatting, strict TypeScript, and zero-warning lint passed; the targeted browser run started but did not complete before the local command time limit.
+
+## Block G Jamaat query â€” September 16
+
+Prepared `supabase/publish-parsa-citi-block-g-times.sql` for database-owner execution with the user-supplied Block G daily times and Friday 13:30. The timetable starts today in Karachi and remains active until replaced. The query preserves publication history and audit, and leaves Block A and mosque verification unchanged. Hosted execution is not claimed.
+
+The latest Block G update changes the ongoing timetable to Fajr 05:45, Dhuhr 13:30, Asr 17:30, Maghrib 18:40, Isha 20:30 and Jumuah 13:30. The operator query and ignored intake record are updated; hosted execution remains pending.
+
+All 16 PostgreSQL/PostGIS tests passed, including missing-date rejection, the six exact supplied times, anonymous public reads, repeat publication with archive/audit preservation, overlap rollback and untouched Block A.
+
+## Name-only saved places â€” September 16
+
+Final targeted browser run: all six mobile/desktop cases passed in 34.3 seconds with exit 0. Formatting checks passed. Map styles and directory responses are stubbed in these interaction tests.
+
+Removed the saved-place form from the main screen. The location label now opens a modal with existing saved places, explicit GPS access and a map point picker. Saving asks only for a name; coordinates come from the selected point. Existing device-local records remain readable. Production build, targeted lint and five saved-address/radius unit tests passed. Mobile/desktop map-point save checks passed, including exact coordinate forwarding and Escape dismissal. The local production app was restarted on port 3000. Its live nearby endpoint returns HTTP 200 with no results; a fresh Supabase read still finds neither Parsa Citi slug. Live insertion remains pending execution of `supabase/add-parsa-citi-mosques.sql` by a database operator.
+
+## Live lookup diagnosis and saved addresses â€” September 16
+
+Restarted the updated production build on localhost:3000. Its live nearby API returned HTTP 200 with an empty results array at the Parsa Citi midpoint, confirming the local lookup now reaches the backend. The missing mosque records still require execution of the prepared operator SQL. Production build and five targeted unit tests passed. Four mobile/desktop layout and saved-place browser cases reported passing assertions; runner cleanup remained pending. Their map/discovery responses were stubbed, so these are interaction checks rather than live tile verification.
+
+Network-enabled read-only probes returned HTTP 200 for Supabase Auth, search, nearby, QR and distance. Both requested Parsa Citi slugs are absent, and the 0.8 km pilot nearby query returns an empty array. SQL insertion remains pending privileged database access. The screenshot's failed query is distinct from this successful empty result; it also shows the older Leaflet build. Home/Work/custom saved addresses are now implemented as explicit device-local storage, with nearby selection and removal; no public favourite defaults or invented records were added. See [saved addresses](features/015-saved-addresses.md).
+
+## Pre-commit review â€” September 16
+
+Formatting, zero-warning lint, strict TypeScript, production build and all 75 unit/database tests passed. One formatting issue in the registration browser test was corrected. The current mobile browser run failed waiting for OpenFreeMap to finish loading; network access is restricted in this environment, so a successful live-map release check is not established. Older browser tests still target superseded Following/Leaflet controls and need updating. No commit or push was made during this review. Environment secrets, private Imam intake and generated worker assets are Git-ignored.
+
+## Parsa Citi intake and map radius â€” September 16
+
+Prepared exact Block G/A coordinates in `supabase/add-parsa-citi-mosques.sql`; the Block G address is now first floor. User-supplied Block G times and Imam contact are saved only in ignored local intake, not a public bundle. Privileged database access is still required. Last hosted read found neither requested slug; no live insertion is claimed. The initial viewport now covers a maximum 0.8 km radius around the pilot area or selected location. Fixed the legacy mobile CSS shrinking the logo to 25px. MapLibre worker assets are prepared by predev/prebuild to support v6 with the project's bundler.
+
+## OpenFreeMap â€” September 16
+
+Switched public and registration maps to MapLibre/OpenFreeMap Positron, replacing Google and Leaflet rendering. No map key is required. Shared published-time resolution, favourites and registration search remain unchanged. Verification is tracked in [OpenFreeMap](features/014-openfreemap.md); previous Google setup instructions are superseded.
+
+## Google Maps and logo serving â€” September 16
+
+The Arabic logo existed in source while port 3000 served an older production build. Rebuilding/restarting is required to expose the change. Added a Google Maps JavaScript provider using Advanced Markers and existing published-time resolution. No Google key was configured at inspection; attributed OpenStreetMap remains the fallback. Live Google loading and billing/API authorization remain unverified. See [Google Maps](features/013-google-maps.md).
+
+## Arabic brand â€” September 16
+
+The shared brand now places the Arabic name **منارة** inside the minaret shaft, with a small MINARAH label and brass accents. Public-home logo visibility is restored. Scope and font portability are recorded in [Arabic brand](features/012-arabic-brand.md).
+
+## Nearby and Favourites â€” September 15
+
+The public home now follows the three supplied mobile references: exactly Nearby and Favourites tabs, time-labelled MapLibre markers, deliberate location permission with manual fallback, and device-local favourites. Nearby results are compact mosque cards with an emphasized Next Jamaat block, full Arabic-labelled timetable, Qad Qamatis-Salah label, freshness, favourite control and mosque-page link. Shared live/demo discovery, publication freshness and timezone resolution are reused. Existing admin/registration implementations and earlier workspace edits are preserved; drawer work is deferred. See [public mobile specification](features/011-public-mobile.md).
+
+Production build, strict TypeScript, targeted lint and 28 schedule/discovery tests passed. The mobile map-selection, favourites-persistence and mosque-page interaction test passed with the documented map-tile fallback. No hosted deployment or real mosque records changed. The two Google Maps links and actual published schedules remain user inputs for the data task.
+
+Last updated: 2026-09-16. [PHASE_1_PLAN.md](../PHASE_1_PLAN.md) retains the historical audit and Milestones 1â€“3 reports.
+
+## Map-first registration revision â€” September 9
 
 - Latest instruction supersedes Following-first startup. Map renders immediately; directory results and provider map places have separate marker/card/favourite handling. Provider places have no linked timetable and never display invented prayer times.
 - Public registration now starts with place search, GPS, map click/drag or manual coordinates. Confirm the pin before account creation/sign-in, then enter mosque and representative details. Fixed-route auth returns and same-tab pin recovery are implemented.
 - Sixth migration stores validated sect/sub-sect in the private registration record and exposes it to platform reviewers. All six migrations executed in local PostgreSQL/PostGIS; invalid sect input was rejected and valid values persisted. Hosted migrations five/six and Gmail-owned Supabase verification remain external dependencies.
 - 72 tests in 8 files passed, including real SQL classification validation and callback destination restrictions. All 42 mobile/desktop Chromium browser checks passed, including search/favourites, always-visible maps, registration pin selection, GPS, manual fallback and same-tab recovery without password storage. Lint and formatting passed. Mobile registration screenshot inspected; live tile/search verification and deployment remain in progress. Authenticated hosted form completion is not claimed.
+- Production build and strict TypeScript passed. The expanded read-only release audit passed against all six migrations (14/14 database tests). Vercel rejected the old commit author with TEAM_ACCESS_REQUIRED; the tested release was recorded in new commit `60d7dc6` using the verified Gmail author/committer. Earlier history was preserved, no Git push was made, and the new deployment entered its build successfully.
+- Google Maps/Places was discussed at the user's request. It is not enabled: a Gmail-owned Google Cloud project, billing and website-restricted API key are still required. Current maps/search use Leaflet/OpenStreetMap and Photon; no Google key or billing account was created or used.
 
-## Following, maps and deployment — September 9
+## Following, maps and deployment â€” September 9
 
 - Account correction: Vercel API verified the signed-in identity and the project's sole team owner as `hamzakhan.dev1446@gmail.com`. No work-account Vercel resources were identified, so the Gmail-owned project was preserved. Git's global and repository author email settings were changed to Gmail and verified; existing commit history retains its original author. Tracked-file search found no work-email references. The deployment configuration helper now checks the authenticated email before changing hosted settings. The first deployment is READY; the later deployment is BLOCKED and is not claimed as released. Supabase account ownership remains unverified.
 
@@ -26,7 +116,7 @@ Last updated: 2026-09-09. [PHASE_1_PLAN.md](../PHASE_1_PLAN.md) retains the hist
 
 ## Earlier Phase 1 position
 
-**Phase 1 application workflows are implemented; release verification remains in progress.** The resumed workspace already contained QR, authentication/admin, schedule editing, onboarding/review and PWA implementations. This continuation verified that work, fixed a publication revision race and added missing regression coverage. Scope is recorded in [Milestones 4–9](features/004-009-mvp-completion.md).
+**Phase 1 application workflows are implemented; release verification remains in progress.** The resumed workspace already contained QR, authentication/admin, schedule editing, onboarding/review and PWA implementations. This continuation verified that work, fixed a publication revision race and added missing regression coverage. Scope is recorded in [Milestones 4â€“9](features/004-009-mvp-completion.md).
 
 | Milestone               | State                             | Evidence / remaining work                                                                                                                                                                         |
 | ----------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -78,3 +168,27 @@ Last updated: 2026-09-09. [PHASE_1_PLAN.md](../PHASE_1_PLAN.md) retains the hist
 - README and feature/architecture notes now document release guards, confirmation recovery, database audit and staging execution. Relative Markdown file-link checks passed for the edited documentation.
 - Remaining cross-browser run: **23/26 passed** (Firefox 13/13; WebKit mobile 10/13), with the already-failing offline case excluded from that run. WebKit failures were refresh not displaying the injected 22:15 time, the skip link not receiving Tab focus, and Search remaining disabled in the API-failure scenario. These need diagnosis before cross-browser acceptance can be claimed. WebKit offline was not run. Accessibility, confirmation recovery and print-layout checks passed on both engines; the Firefox poster screenshot was visually inspected.
 - Final formatting and `git diff --check` passed. Lint and TypeScript passed again after the test configuration/assertion edits. No application behavior was changed during this continuation.
+
+## Corrected mosque assignment - September 17
+
+User clarified that the revised timetable belongs to Block A. Created publish-parsa-citi-block-a-times.sql and restored Block G SQL to its original times. Checked both scripts target their respective slugs and retain the shared audited publisher. No hosted database writes performed. This supersedes earlier references to revised Block G times.
+
+September 17: Corrected Friday-only Jumuah activation, exact local publication date/time and per-prayer red live label. Timing/schedule tests and production build checked; local server refresh follows verification.
+
+Map prayer status added September 17: shared timing helper and local-Friday filtering drive marker colors and blinking live label. Production build verifies types. No new live database writes.
+
+Home return restoration: saved Home takes priority, otherwise session position and already-authorized fresh GPS. Each entry requests fresh discovery; browser pageshow restoration is handled. Production build/type verification performed; navigation browser checks pending.
+
+Map marker name/time layout: prayer name now appears above time, including the active prayer during live/recent windows. Production build and TypeScript passed; local server restarted.
+
+Installation and notifications: 50x50 cropped logo, visible install/settings workflow and configurable foreground-only alerts implemented. Build passed. Existing public deployment returns HTTP 200; these changes remain local. Background push is NOT implemented or configured; see feature 017.
+
+Full-width public drawer and centered header location implemented. Logo uses natural 25x50 proportions with cropped viewBox, superseding stretched square logo. Production build/typecheck performed; interactive browser verification pending.
+
+September 18 detail presentation: removed generic title and moved back navigation to a white/green card control. Port 3000 confirmed running Minarah; production build verification in progress.
+
+Detail page production build and TypeScript passed. Stopped the local server; port 3000 has no listener. User will start the app; do not automatically start/restart it.
+
+September 18 header location refinement: replaced the text glyph with location-pin and down-chevron SVG icons and removed the redundant “Near” prefix from the displayed place name. The control remains a labelled dialog-opening button. Targeted lint and TypeScript checks passed; the app server was not started.
+
+September 18 saved-location refinement: replaced plain location rows with themed cards and labelled edit/delete icon controls. Editing updates the existing stable record’s name and map point; duplicate names are rejected. Formatting, targeted lint and TypeScript checks passed. The production bundle was rebuilt, but the user-owned server was not restarted.

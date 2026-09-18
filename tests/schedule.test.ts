@@ -14,6 +14,7 @@ import {
 } from "@/domain/validation";
 import { canManageMosque } from "@/domain/authorization";
 import type { JamaatSchedule } from "@/domain/types";
+import { getNearbyRadiusMeters } from "@/lib/config";
 
 const { schedules, mosques } = getSampleData("2026-09-07T00:00:00Z");
 const mosqueId = mosques[0]!.id;
@@ -22,6 +23,15 @@ const resolve = (date: string, list: JamaatSchedule[] = schedules) =>
   resolveMosqueSchedule({ mosqueId, localDate: date, schedules: list });
 
 describe("published schedule resolution", () => {
+  it("keeps an ongoing publication current years later and ignores archived versions", () => {
+    const ongoing = { ...base, effectiveTo: null };
+    expect(resolve("2035-01-02", [ongoing]).entries).toHaveLength(5);
+    expect(
+      resolve("2035-01-02", [{ ...ongoing, status: "archived" }]).entries,
+    ).toEqual([]);
+    expect(resolve("2035-01-02", [ongoing]).publishedAt).toBe(base.publishedAt);
+    expect(resolve("2020-01-01", [ongoing]).entries).toEqual([]);
+  });
   it("resolves only the requested mosque and published period", () => {
     expect(resolve("2026-09-07").entries).toHaveLength(5);
     expect(resolve("2030-01-01").entries).toEqual([]);
@@ -45,6 +55,17 @@ describe("published schedule resolution", () => {
   });
   it("includes multiple Friday sessions only on Friday", () => {
     expect(resolve("2026-09-11").jumuahSessions).toHaveLength(2);
+    expect(
+      resolve("2026-09-11").entries.some((entry) => entry.prayer === "dhuhr"),
+    ).toBe(false);
+    expect(
+      resolve("2026-09-10").entries.some((entry) => entry.prayer === "dhuhr"),
+    ).toBe(true);
+    expect(
+      resolve("2026-09-11", [{ ...base, jumuahSessions: [] }]).entries.some(
+        (entry) => entry.prayer === "dhuhr",
+      ),
+    ).toBe(true);
     expect(resolve("2026-09-10").jumuahSessions).toHaveLength(0);
   });
   it("fails explicitly on ambiguous published periods", () => {
@@ -169,6 +190,15 @@ describe("validation and permissions", () => {
     overrides: base.overrides,
   };
   it("validates complete schedules, clock times and real dates", () => {
+    expect(
+      scheduleDraftSchema.safeParse({
+        ...draft,
+        effectiveTo: null,
+        overrides: [
+          { prayer: "isha", localTime: "21:00", localDate: "2035-01-02" },
+        ],
+      }).success,
+    ).toBe(true);
     expect(scheduleDraftSchema.safeParse(draft).success).toBe(true);
     expect(
       scheduleDraftSchema.safeParse({
@@ -207,6 +237,23 @@ describe("validation and permissions", () => {
     ).toBe(false);
     expect(qrCodeSchema.safeParse("../admin").success).toBe(false);
     expect(qrCodeSchema.safeParse("R3wN5Pv9g_xf-2cK8sjDaA").success).toBe(true);
+  });
+  it("caps the pilot nearby radius at 0.8 kilometres", () => {
+    expect(
+      nearbyQuerySchema.parse({ latitude: 0, longitude: 0 }).radiusMeters,
+    ).toBe(800);
+    expect(
+      nearbyQuerySchema.safeParse({
+        latitude: 0,
+        longitude: 0,
+        radiusMeters: 801,
+      }).success,
+    ).toBe(false);
+    process.env.NEARBY_RADIUS_METERS = "800";
+    expect(getNearbyRadiusMeters()).toBe(800);
+    process.env.NEARBY_RADIUS_METERS = "801";
+    expect(getNearbyRadiusMeters()).toBe(800);
+    delete process.env.NEARBY_RADIUS_METERS;
   });
   it("requires the exact user, mosque, role and active membership", () => {
     const member = {

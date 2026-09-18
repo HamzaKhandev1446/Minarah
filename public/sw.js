@@ -1,4 +1,11 @@
 const SHELL_CACHE = "minarah-shell-v1";
+// Notification destinations are restricted to this app's mosque pages.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = event.notification.data?.url;
+  const path = typeof target === "string" && /^\/mosques\/[a-z0-9-]+$/.test(target) ? target : "/";
+  event.waitUntil(self.clients.openWindow(new URL(path, self.location.origin).href));
+});
 const SHELL = [
   "/offline.html",
   "/icons/icon-192.png",

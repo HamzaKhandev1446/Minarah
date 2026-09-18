@@ -6,6 +6,7 @@ export default defineConfig([
   ...nextVitals,
   ...nextTs,
   globalIgnores([
+    "public/map-worker/**",
     ".tools/**",
     "test-results/**",
     "playwright-report/**",

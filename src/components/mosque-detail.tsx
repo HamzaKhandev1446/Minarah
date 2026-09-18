@@ -59,10 +59,6 @@ export function MosqueDetail({
   }, [refresh, invalidate, position]);
   return (
     <main id="main" className="board-shell">
-      <Link className="back-link" href={mode === "demo" ? "/?mode=demo" : "/"}>
-        ← Find mosques
-      </Link>
-      <h1>Mosque Jamaat times</h1>
       {fromQr && (
         <p className="notice">
           Get this mosque’s latest Jamaat times. Check the mosque name below,

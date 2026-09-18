@@ -19,6 +19,8 @@ QR routes/poster components → authentication and protected admin/editor → on
 
 ## Connection dependencies
 
+For the user-requested Block G pilot intake, `supabase/publish-parsa-citi-block-g-times.sql` is a database-owner SQL Editor operation. It requires explicit inclusive effective dates, publishes the five supplied daily times plus Friday 13:45 in Asia/Karachi, and leaves mosque verification unchanged. Exact-period replacement archives the prior bundle and records before/after snapshots atomically; other overlaps fail without changing the current publication. No application grants or memberships are added. Block A needs its own supplied times and is untouched. Acceptance requires missing-date rejection, anonymous readability of published entries, preserved replacement audit and overlap rollback.
+
 User is creating Supabase project. Public URL/key configure application connectivity; migration execution requires authorized database/CLI access or the user running the prepared SQL. Bootstrap the first platform admin only for a confirmed Auth user via a privileged operator. No shared default passwords or client-side admin bypasses.
 
 ## Verification evidence

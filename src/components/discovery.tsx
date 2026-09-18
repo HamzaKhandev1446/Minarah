@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { UiIcon } from "./ui-icon";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   locationErrorMessage,
@@ -256,261 +257,332 @@ export function Discovery({
       </main>
     );
   return (
-    <main id="main" className="directory-shell">
-      <section className="discovery-intro">
-        <p className="eyebrow">Together, in prayer</p>
-        <h1>{view === "following" ? "Your mosques." : "Find your mosque."}</h1>
-        <p className="intro-copy">
-          {view === "following"
-            ? "Your next prayer, one tap away. Most-opened mosques appear first."
-            : "Find a mosque near you. Follow it for its latest Jamaat times."}
-        </p>
-      </section>
-      <div className="home-tabs" aria-label="Mosque views">
-        <button
-          className={view === "following" ? "button" : "button secondary"}
-          aria-pressed={view === "following"}
-          onClick={() => {
-            cancelLocation();
-            setView("following");
-            setHeading("Mosques you follow");
-            void load({ kind: "followed", ids });
-          }}
-        >
-          Following ({ids.length})
-        </button>
-        <button
-          className={view === "map" ? "button" : "button secondary"}
-          aria-pressed={view === "map"}
-          onClick={() => {
-            setView("map");
-            if (heading === "Mosques you follow")
-              setHeading("Find your mosque");
-          }}
-        >
-          Map & discover
-        </button>
+    <main
+      id="main"
+      className={`directory-shell explorer ${view === "following" ? "is-following" : "is-map"}`}
+    >
+      <div className="explorer-heading">
+        <section className="discovery-intro">
+          <p className="eyebrow">A place to belong</p>
+          <h1>
+            {view === "following" ? "Your mosques." : "Your mosque, closer."}
+          </h1>
+          <p>
+            {view === "following"
+              ? "The places you return to. The times that matter."
+              : "Find your mosque. Stay close to your community."}
+          </p>
+        </section>
+        <div className="home-tabs" aria-label="Mosque views">
+          <button
+            className={view === "map" ? "view-tab active" : "view-tab"}
+            aria-pressed={view === "map"}
+            onClick={() => {
+              setView("map");
+              if (heading === "Mosques you follow")
+                setHeading("Find your mosque");
+            }}
+          >
+            <UiIcon name="pin" size={18} />
+            Map & discover
+          </button>
+          <button
+            className={view === "following" ? "view-tab active" : "view-tab"}
+            aria-pressed={view === "following"}
+            onClick={() => {
+              cancelLocation();
+              setView("following");
+              setHeading("Mosques you follow");
+              void load({ kind: "followed", ids });
+            }}
+          >
+            <UiIcon name="heart" size={18} />
+            Following ({ids.length})
+          </button>
+        </div>
       </div>
-      {view === "map" && (
-        <MosqueMap
-          results={visibleResults}
-          onSelect={openBoard}
-          center={mapCenter}
-          places={places}
-          onSelectPlace={setSelectedPlace}
-        />
-      )}
-      {view === "map" && selectedPlace && (
-        <article className="notice" aria-label="Selected map place">
-          <h2>{selectedPlace.name || "Map place"}</h2>
-          <p>
-            {selectedPlace.address} {selectedPlace.city}
-          </p>
-          <p>
-            Map-provider listing — no linked Minarah timetable. No
-            mosque-published Jamaat times are available for this listing. Check
-            registered mosque results for a linked timetable.
-          </p>
-          <div className="actions">
-            <button
-              className="button"
-              onClick={() => togglePlace(selectedPlace)}
-            >
-              {savedPlaces.some((p) => placeKey(p) === placeKey(selectedPlace))
-                ? "Remove favourite place"
-                : "Add place to favourites"}
-            </button>
-            <Link
-              className="button secondary"
-              href={`/register-mosque?lat=${selectedPlace.latitude}&lng=${selectedPlace.longitude}`}
-            >
-              Register this mosque
-            </Link>
-          </div>
-        </article>
-      )}
-      {mode === "demo" ? (
-        <div className="notice">
-          <strong>Demo · fictional Karachi mosques and schedules.</strong> Do
-          not use these times for prayer attendance.{" "}
+      {mode === "demo" && (
+        <div className="demo-strip">
+          <span className="status-dot" />
+          <strong>Demo · fictional Karachi mosques and schedules.</strong>
+          <span>Do not use these times for prayer attendance.</span>
           <Link href="/">Return to live directory</Link>
         </div>
-      ) : (
-        <p className="muted">
-          Want to try Minarah?{" "}
-          <Link href="/?mode=demo">Explore the fictional demo</Link>.
-        </p>
       )}
-      {view !== "following" && (
-        <section className="discovery-controls" aria-label="Find mosques">
-          <p>
-            Minarah uses your location to find Jamaat times at mosques near you.
-          </p>
-          <div className="actions">
-            <button className="button" onClick={locate} disabled={locating}>
-              {locating ? "Finding location…" : "Use my location"}
-            </button>
-            {mode === "demo" && (
-              <button
-                className="button secondary"
-                onClick={() => {
+      <div className="explore-layout">
+        {view !== "following" && (
+          <section className="explorer-map" aria-label="Discover on the map">
+            <MosqueMap
+              results={visibleResults}
+              onSelect={openBoard}
+              center={mapCenter}
+              places={places}
+              onSelectPlace={setSelectedPlace}
+            />
+            <section className="map-search-panel" aria-label="Find mosques">
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
                   cancelLocation();
-                  setHeading("Near the sample Karachi location");
-                  setView("map");
-                  void load({
-                    kind: "nearby",
-                    latitude: 24.8615,
-                    longitude: 67.011,
-                  });
+                  setHeading("Search results");
+                  void load({ kind: "search", query: text.trim() });
+                  void findPlaces(text.trim());
                 }}
               >
-                Try sample location
-              </button>
+                <label className="visually-hidden" htmlFor="mosque-search">
+                  Search by mosque name or city
+                </label>
+                <div className="map-search-field">
+                  <UiIcon name="search" />
+                  <input
+                    id="mosque-search"
+                    type="search"
+                    value={text}
+                    onChange={(event) => setText(event.target.value)}
+                    minLength={2}
+                    maxLength={120}
+                    required
+                    placeholder={
+                      mode === "demo"
+                        ? "Try Cedar or Karachi"
+                        : "Search a mosque or city"
+                    }
+                  />
+                  <button
+                    type="submit"
+                    className="button"
+                    disabled={busy || placesBusy || text.trim().length < 2}
+                  >
+                    Search
+                  </button>
+                </div>
+              </form>
+              <div className="map-quick-actions">
+                <button
+                  className="map-chip"
+                  onClick={locate}
+                  disabled={locating}
+                >
+                  <UiIcon name="locate" size={17} />
+                  {locating ? "Finding location…" : "Use my location"}
+                </button>
+                {mode === "demo" && (
+                  <button
+                    className="map-chip"
+                    onClick={() => {
+                      cancelLocation();
+                      setHeading("Near the sample Karachi location");
+                      setView("map");
+                      void load({
+                        kind: "nearby",
+                        latitude: 24.8615,
+                        longitude: 67.011,
+                      });
+                    }}
+                  >
+                    Try sample location
+                  </button>
+                )}
+              </div>
+              {location !==
+                "Location is optional. Search manually at any time." && (
+                <p className="map-status" role="status">
+                  {location}
+                </p>
+              )}
+            </section>
+            {!data && !selectedPlace && !busy && places.length === 0 && (
+              <div className="map-hint">
+                <span className="hint-icon">
+                  <UiIcon name="mosque" size={23} />
+                </span>
+                <div>
+                  <strong>Your next prayer starts here</strong>
+                  <span>Search above or use your location to get started.</span>
+                </div>
+              </div>
+            )}
+            {selectedPlace && (
+              <article
+                className="map-selection"
+                aria-label="Selected map place"
+              >
+                <div className="selection-heading">
+                  <span className="place-category">Map listing</span>
+                  <button
+                    className="icon-button"
+                    aria-label="Close map place"
+                    onClick={() => setSelectedPlace(null)}
+                  >
+                    ×
+                  </button>
+                </div>
+                <h2>{selectedPlace.name || "Map place"}</h2>
+                <p>
+                  {selectedPlace.address} {selectedPlace.city}
+                </p>
+                <p className="availability-note">
+                  No mosque-published Jamaat times are linked to this listing
+                  yet.
+                </p>
+                <div className="actions">
+                  <button
+                    className="button"
+                    onClick={() => togglePlace(selectedPlace)}
+                  >
+                    <UiIcon name="heart" size={17} />
+                    {savedPlaces.some(
+                      (p) => placeKey(p) === placeKey(selectedPlace),
+                    )
+                      ? "Remove favourite place"
+                      : "Add place to favourites"}
+                  </button>
+                  <Link
+                    className="text-action"
+                    href={`/register-mosque?lat=${selectedPlace.latitude}&lng=${selectedPlace.longitude}`}
+                  >
+                    Register this mosque <UiIcon name="arrow" size={17} />
+                  </Link>
+                </div>
+              </article>
+            )}
+          </section>
+        )}
+        <section
+          className="discovery-results"
+          aria-labelledby="results-heading"
+          aria-busy={busy}
+        >
+          <div className="results-heading">
+            <div>
+              <p className="eyebrow">
+                {view === "following"
+                  ? "Saved for you"
+                  : "Discover your community"}
+              </p>
+              <h2 id="results-heading">{heading}</h2>
+            </div>
+            {data && (
+              <span className="result-count">
+                {visibleResults.length}
+                {heading.startsWith("Near")
+                  ? ` · ${data.radiusMeters / 1000} km`
+                  : ""}
+              </span>
             )}
           </div>
-          <p role="status" className="muted">
-            {location}
-          </p>
           {!available && (
-            <p role="status">
+            <p role="status" className="notice">
               Browser storage is unavailable. Following cannot be saved here.
             </p>
           )}
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              cancelLocation();
-              setHeading("Search results");
-              void load({ kind: "search", query: text.trim() });
-              void findPlaces(text.trim());
-            }}
-          >
-            <label htmlFor="mosque-search">Search by mosque name or city</label>
-            <div className="search-row">
-              <input
-                id="mosque-search"
-                type="search"
-                value={text}
-                onChange={(event) => setText(event.target.value)}
-                minLength={2}
-                maxLength={120}
-                required
-                placeholder={
-                  mode === "demo"
-                    ? "Try Cedar or Karachi"
-                    : "Mosque name or city"
-                }
-              />
+          {placeError && (
+            <p role="status" className="notice">
+              {placeError}
+            </p>
+          )}
+          {placesBusy && <p role="status">Searching map places…</p>}
+          {busy && <p role="status">Loading published Jamaat information…</p>}
+          {error && (
+            <div className="notice error" role="alert">
+              <p>{error}</p>
+              {data && (
+                <p>
+                  Refresh failed. Previously loaded information may have
+                  changed.
+                </p>
+              )}
               <button
-                className="button"
-                type="submit"
-                disabled={busy || placesBusy || text.trim().length < 2}
+                className="button secondary"
+                onClick={() => query.current && void load(query.current, true)}
               >
-                Search
+                Try again
               </button>
             </div>
-          </form>
-        </section>
-      )}
-      {!available && view === "following" && (
-        <p role="status" className="notice">
-          Browser storage is unavailable. Following cannot be saved here. Use
-          Map & discover to find a mosque.
-        </p>
-      )}
-
-      <section aria-labelledby="results-heading" aria-busy={busy}>
-        {placeError && (
-          <p role="status" className="notice">
-            {placeError}
-          </p>
-        )}
-        {placesBusy && <p role="status">Searching map places…</p>}
-        {mode === "live" &&
-          (view === "following" ? savedPlaces : places).length > 0 && (
-            <section aria-label="Map places">
-              <h2>
-                {view === "following"
-                  ? "Favourite map places"
-                  : "Map-place results"}
-              </h2>
-              <p className="muted">
-                These locations have no linked Minarah timetable. Place data ©
-                OpenStreetMap, search by Photon.
-              </p>
-              <ul className="place-results">
-                {(view === "following" ? savedPlaces : places).map((p) => (
-                  <li key={placeKey(p)}>
-                    <button
-                      className="button secondary"
-                      onClick={() => {
-                        setSelectedPlace(p);
-                        setPlaces([p]);
-                        setView("map");
-                        window.scrollTo({ top: 0 });
-                      }}
-                    >
-                      {p.name || p.address || "Map place"}
-                      {p.city ? `, ${p.city}` : ""}
-                    </button>
-                    <button
-                      className="button secondary"
-                      onClick={() => togglePlace(p)}
-                    >
-                      {savedPlaces.some(
-                        (saved) => placeKey(saved) === placeKey(p),
-                      )
-                        ? "Remove favourite place"
-                        : "Add place to favourites"}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </section>
           )}
-        <div className="results-heading">
-          <h2 id="results-heading">{heading}</h2>
-          {data && (
-            <span className="muted">
-              {visibleResults.length}{" "}
-              {visibleResults.length === 1 ? "mosque" : "mosques"}
-              {heading.startsWith("Near")
-                ? ` within ${data.radiusMeters / 1000} km`
-                : ""}
-            </span>
-          )}
-        </div>
-        {busy && <p role="status">Loading published Jamaat information…</p>}
-        {error && (
-          <div className="notice error" role="alert">
-            <p>{error}</p>
-            {data && (
-              <p>
-                Refresh failed. Previously loaded information may have changed.
-              </p>
-            )}
-            <button
-              className="button secondary"
-              onClick={() => query.current && void load(query.current, true)}
-            >
-              Try again
-            </button>
+          <div className="mosque-grid">
+            {visibleResults.map((result, index) => (
+              <MosqueTile
+                key={result.mosque.id}
+                result={result}
+                now={now}
+                mode={mode}
+                onOpen={() => openBoard(result)}
+                favourite={
+                  view === "following" &&
+                  index === 0 &&
+                  (counts[result.mosque.id] ?? 0) > 0
+                }
+              />
+            ))}
           </div>
-        )}
-        {!busy && !error && data && visibleResults.length === 0 && (
-          <div className="empty-state">
-            {heading === "Mosques you follow"
-              ? "Your mosques will appear here. Find your mosque, then choose Follow Mosque."
-              : "No registered mosques found. Try a mosque name or a nearby city."}
-            {view !== "following" && (
-              <p>
-                <Link href="/register-mosque">
-                  Register your mosque at this location
-                </Link>
-              </p>
+          {mode === "live" &&
+            (view === "following" ? savedPlaces : places).length > 0 && (
+              <section className="map-place-list" aria-label="Map places">
+                <h3>
+                  {view === "following"
+                    ? "Favourite map places"
+                    : "Other places on the map"}
+                </h3>
+                <p className="muted">No linked Minarah timetable yet.</p>
+                <ul className="place-results">
+                  {(view === "following" ? savedPlaces : places).map((p) => (
+                    <li key={placeKey(p)}>
+                      <span className="place-list-icon">
+                        <UiIcon name="pin" size={19} />
+                      </span>
+                      <button
+                        className="place-list-name"
+                        onClick={() => {
+                          setSelectedPlace(p);
+                          setPlaces([p]);
+                          setView("map");
+                          window.scrollTo({ top: 0 });
+                        }}
+                      >
+                        {p.name || p.address || "Map place"}
+                        {p.city ? `, ${p.city}` : ""}
+                      </button>
+                      <button
+                        className={`icon-button ${savedPlaces.some((saved) => placeKey(saved) === placeKey(p)) ? "is-saved" : ""}`}
+                        aria-label={
+                          savedPlaces.some(
+                            (saved) => placeKey(saved) === placeKey(p),
+                          )
+                            ? "Remove favourite place"
+                            : "Add place to favourites"
+                        }
+                        onClick={() => togglePlace(p)}
+                      >
+                        <UiIcon name="heart" size={19} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <p className="provider-credit">
+                  Place data © OpenStreetMap · Photon
+                </p>
+              </section>
             )}
-            {view === "following" && (
+          {!busy && !error && data && visibleResults.length === 0 && (
+            <div className="discovery-empty">
+              <span className="empty-icon">
+                <UiIcon
+                  name={view === "following" ? "heart" : "mosque"}
+                  size={27}
+                />
+              </span>
+              <h3>
+                {view === "following"
+                  ? "Make yourself at home"
+                  : "Your mosque could be next"}
+              </h3>
               <p>
+                {heading === "Mosques you follow"
+                  ? "Your mosques will appear here. Find your mosque, then choose Follow Mosque."
+                  : "No registered mosques found. Try a mosque name or a nearby city."}
+              </p>
+              {view === "following" ? (
                 <button
                   className="button"
                   onClick={() => {
@@ -519,34 +591,45 @@ export function Discovery({
                     setData(null);
                   }}
                 >
-                  Find a mosque
+                  Find a mosque <UiIcon name="arrow" size={17} />
                 </button>
+              ) : (
+                <Link className="text-action" href="/register-mosque">
+                  Register your mosque <UiIcon name="arrow" size={17} />
+                </Link>
+              )}
+            </div>
+          )}
+          {!data && !busy && !error && (
+            <div className="discovery-empty">
+              <span className="empty-icon">
+                <UiIcon name="mosque" size={30} />
+              </span>
+              <h3>One community. Many mosques.</h3>
+              <p>
+                Find a mosque on the map, save it to Following, and open its
+                published Jamaat times in a tap.
               </p>
-            )}
-          </div>
-        )}
-        {!data && !busy && !error && (
-          <p className="empty-state">
-            Use your location or search above to find published Jamaat times.
-          </p>
-        )}
-        <div className="mosque-grid">
-          {visibleResults.map((result, index) => (
-            <MosqueTile
-              key={result.mosque.id}
-              result={result}
-              now={now}
-              mode={mode}
-              onOpen={() => openBoard(result)}
-              favourite={
-                view === "following" &&
-                index === 0 &&
-                (counts[result.mosque.id] ?? 0) > 0
-              }
-            />
-          ))}
-        </div>
-      </section>
+              <div className="discovery-how">
+                <span>
+                  <b>1</b> Find your mosque
+                </span>
+                <span>
+                  <b>2</b> Add to Following
+                </span>
+                <span>
+                  <b>3</b> See Jamaat times
+                </span>
+              </div>
+              {mode === "live" && (
+                <Link className="demo-link" href="/?mode=demo">
+                  Explore the fictional demo <UiIcon name="arrow" size={15} />
+                </Link>
+              )}
+            </div>
+          )}
+        </section>
+      </div>
     </main>
   );
 }

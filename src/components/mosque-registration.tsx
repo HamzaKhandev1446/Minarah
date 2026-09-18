@@ -4,6 +4,7 @@ import { LocationPicker } from "./location-picker";
 import { AuthForm } from "./auth-form";
 import { SubmissionForm } from "./submission-form";
 import { placeSchema, type SelectedPlace } from "@/lib/place-search";
+import { UiIcon } from "./ui-icon";
 const storageKey = "minarah:registration-location:v1";
 export function MosqueRegistration({
   email,
@@ -51,55 +52,94 @@ export function MosqueRegistration({
   return (
     <div className="registration-flow">
       <ol className="registration-steps">
-        <li aria-current={!confirmed ? "step" : undefined}>1. Location</li>
+        <li
+          className={confirmed ? "complete" : ""}
+          aria-current={!confirmed ? "step" : undefined}
+        >
+          <span>{confirmed ? <UiIcon name="check" size={14} /> : "1"}</span>
+          Location
+        </li>
         <li aria-current={confirmed && !email ? "step" : undefined}>
-          2. Account
+          <span>{email ? <UiIcon name="check" size={14} /> : "2"}</span>Account
         </li>
         <li aria-current={confirmed && email ? "step" : undefined}>
-          3. Mosque details
+          <span>3</span>Mosque details
         </li>
       </ol>
       {!confirmed ? (
         <>
-          <h2>Where is your mosque?</h2>
+          <div className="step-heading">
+            <p className="eyebrow">Step 1 of 3</p>
+            <h2>Where is your mosque?</h2>
+            <p>Find it on the map. We’ll take care of the coordinates.</p>
+          </div>
           <LocationPicker value={place} onChange={(p) => save(p)} />
-          <button
-            className="button"
-            disabled={!place}
-            onClick={() => place && save(place, true)}
-          >
-            Confirm mosque location
-          </button>
+          <div className="step-footer">
+            <div>
+              <strong>
+                {place ? "Location selected" : "Choose a location to continue"}
+              </strong>
+              <span>
+                {place?.name ||
+                  (place
+                    ? "Make sure the pin is at your mosque."
+                    : "Search, use your location, or tap the map.")}
+              </span>
+            </div>
+            <button
+              className="button"
+              disabled={!place}
+              onClick={() => place && save(place, true)}
+            >
+              <span>Confirm mosque location</span>
+              <UiIcon name="arrow" size={18} />
+            </button>
+          </div>
         </>
       ) : (
         <>
-          <p className="notice">
-            Mosque location: {place?.latitude.toFixed(6)},{" "}
-            {place?.longitude.toFixed(6)}{" "}
+          <div className="confirmed-location">
+            <span className="confirmed-icon">
+              <UiIcon name="check" size={20} />
+            </span>
+            <div>
+              <strong>{place?.name || "Mosque location confirmed"}</strong>
+              <p>
+                {place?.city ||
+                  `${place?.latitude.toFixed(6)}, ${place?.longitude.toFixed(6)}`}
+              </p>
+            </div>
             <button
-              className="button secondary"
+              className="text-action"
               onClick={() => place && save(place, false)}
             >
               Change location
             </button>
-          </p>
+          </div>
           {!email ? (
             <>
-              <h2>Create your representative account</h2>
-              <p>
-                Use your own email and password. Confirm your email, then sign
-                in here to complete the mosque details. Your selected pin is
-                kept in this tab; passwords are never saved in browser storage.
-              </p>
-              <AuthForm configured={configured} next="/register-mosque" />
+              <div className="step-heading">
+                <p className="eyebrow">Step 2 of 3</p>
+                <h2>Create your representative account</h2>
+                <p>A personal account to manage your mosque’s timetable.</p>
+              </div>
+              <div className="account-step">
+                <AuthForm configured={configured} next="/register-mosque" />
+                <p className="account-help">
+                  Confirm your email, then sign in to continue. Your selected
+                  location stays in this tab.
+                </p>
+              </div>
             </>
           ) : (
             <>
-              <h2>Your account and mosque details</h2>
-              <p>
-                Signed in as {email}. Your authority will be reviewed before
-                owner access is activated.
-              </p>
+              <div className="step-heading">
+                <p className="eyebrow">Step 3 of 3</p>
+                <h2>Introduce your mosque</h2>
+                <p>
+                  Signed in as {email}. Complete the details below for review.
+                </p>
+              </div>
               {!ready && (
                 <p role="status" className="notice">
                   Mosque registration is not connected yet. You can explore the

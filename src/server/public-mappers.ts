@@ -25,7 +25,7 @@ const scheduleRow = z.object({
   id: z.uuid(),
   mosque_id: z.uuid(),
   effective_from: z.string(),
-  effective_to: z.string(),
+  effective_to: z.string().nullable(),
   status: z.literal("published"),
   revision: z.number(),
   published_at: z.string(),

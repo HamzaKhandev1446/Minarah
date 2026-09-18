@@ -14,7 +14,7 @@ Minarah is mobile-first, neutral across Muslim communities and globally usable. 
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | DATA-01 | Jamaat is the mosque-selected congregation time. Never substitute calculated prayer beginning times or fictional data when presenting mosque-published information.                            |
 | PUB-01  | Offer browser geolocation with a short explanation. Handle not requested, granted, denied, unsupported, timeout, unavailable position and no nearby results. Manual search remains available.  |
-| PUB-02  | Find nearby mosques using bounded backend geospatial queries, configurable 5 km default radius and ascending distance order. Search names and city/locality without GPS.                       |
+| PUB-02  | Find nearby mosques using bounded backend geospatial queries, a 0.8 km maximum pilot radius and ascending distance order. Search names and city/locality without GPS.                          |
 | PUB-03  | Prioritize next Jamaat, local time, mosque name, distance where available, remaining time, today's schedule, verification and publication freshness.                                           |
 | PUB-04  | `/mosques/[slug]` shows identity, address, next Jamaat, full published schedule, multiple Jumu'ah sessions, freshness and an explicit Follow Mosque action.                                    |
 | PUB-05  | Persist anonymous followed mosque IDs in browser storage without login. Keep a storage abstraction that can later support account syncing. Do not persist precise visitor location by default. |

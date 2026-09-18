@@ -8,10 +8,10 @@ export function getSupabaseConfig() {
 }
 
 export function getNearbyRadiusMeters(): number {
-  return z.coerce
+  const configured = z.coerce
     .number()
     .int()
     .min(100)
-    .max(50000)
-    .parse(process.env.NEARBY_RADIUS_METERS || 5000);
+    .parse(process.env.NEARBY_RADIUS_METERS || 800);
+  return Math.min(configured, 800);
 }

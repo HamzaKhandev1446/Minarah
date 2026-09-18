@@ -51,7 +51,7 @@ export default async function ManageMosque({
           (s) =>
             s.status === "published" &&
             s.effectiveFrom <= date &&
-            s.effectiveTo >= date,
+            (s.effectiveTo === null || s.effectiveTo >= date),
         ) ??
         schedules[0] ??
         null);
@@ -82,7 +82,7 @@ export default async function ManageMosque({
       <Link href="/admin">← My mosques</Link>
       <h1>{mosque.name}</h1>
       <p>
-        All times use {mosque.timezone}. Last publication:{" "}
+        All times use {mosque.timezone}. Last published:{" "}
         {initial?.publishedAt
           ? new Date(initial.publishedAt).toLocaleString("en", {
               timeZone: mosque.timezone,
@@ -98,7 +98,7 @@ export default async function ManageMosque({
             className="button secondary"
             href={`/admin/${mosqueId}?schedule=new`}
           >
-            New effective period
+            New timetable
           </Link>
         )}
       </div>
@@ -108,7 +108,10 @@ export default async function ManageMosque({
           {schedules.map((s) => (
             <li key={s.id}>
               <Link href={`/admin/${mosqueId}?schedule=${s.id}`}>
-                {s.effectiveFrom} – {s.effectiveTo} · {s.status}
+                {s.effectiveTo === null
+                  ? "Until changed"
+                  : `${s.effectiveFrom} – ${s.effectiveTo}`}{" "}
+                · {s.status}
               </Link>
             </li>
           ))}
@@ -131,7 +134,10 @@ export default async function ManageMosque({
               timeZone: mosque.timezone,
             })}
           </summary>
-          <p>Changed by: {change.changed_by ?? "Deleted account"}</p>
+          <p>
+            Changed by:{" "}
+            {change.changed_by ?? "Database operator or deleted account"}
+          </p>
           <h3>Previous publication</h3>
           <pre>{JSON.stringify(change.previous_value, null, 2)}</pre>
           <h3>New publication</h3>

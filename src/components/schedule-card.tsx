@@ -8,6 +8,7 @@ import {
   type MosqueResult,
 } from "@/domain/discovery";
 import { FollowButton } from "./public-context";
+import { formatHijriDate } from "@/lib/hijri-date";
 export function ScheduleCard({
   result,
   now,
@@ -50,7 +51,6 @@ export function ScheduleCard({
               </Link>
             )}
           </h2>
-          <p className="muted">{mosque.timezone}</p>
         </div>
         <span className="status-badge">
           {mosque.isSynthetic ? "Fictional · " : ""}
@@ -91,6 +91,9 @@ export function ScheduleCard({
           <h3>Today’s Jamaat</h3>
           <span>{today.localDate} · mosque time</span>
         </div>
+        <p className="hijri-date" title="Calculated Hijri date; local moon sighting may differ.">
+          {formatHijriDate(now, mosque.timezone)} · Hijri (estimated)
+        </p>
         {!today.entries.length && (
           <p className="muted">No schedule has been published for today.</p>
         )}

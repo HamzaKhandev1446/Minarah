@@ -8,6 +8,7 @@ test("public forms, detail and poster pass automated accessibility checks", asyn
 }) => {
   for (const path of [
     "/?mode=demo",
+    "/register-mosque",
     "/mosques/sample-cedar?mode=demo",
     "/auth/login?error=confirmation",
     "/submit",

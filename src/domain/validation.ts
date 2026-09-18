@@ -29,7 +29,7 @@ export const coordinatesSchema = z.object({
   longitude: z.number().finite().min(-180).max(180),
 });
 export const nearbyQuerySchema = coordinatesSchema.extend({
-  radiusMeters: z.number().int().min(100).max(50000).default(5000),
+  radiusMeters: z.number().int().min(100).max(800).default(800),
   limit: z.number().int().min(1).max(50).default(20),
 });
 export const qrCodeSchema = z
@@ -43,7 +43,7 @@ export const scheduleDraftSchema = z
   .object({
     mosqueId: z.uuid(),
     effectiveFrom: localDateSchema,
-    effectiveTo: localDateSchema,
+    effectiveTo: localDateSchema.nullable(),
     entries: z
       .array(entrySchema)
       .length(5)
@@ -77,7 +77,7 @@ export const scheduleDraftSchema = z
       ),
   })
   .superRefine((value, context) => {
-    if (value.effectiveTo < value.effectiveFrom)
+    if (value.effectiveTo !== null && value.effectiveTo < value.effectiveFrom)
       context.addIssue({
         code: "custom",
         path: ["effectiveTo"],
@@ -86,7 +86,7 @@ export const scheduleDraftSchema = z
     value.overrides.forEach((override, index) => {
       if (
         override.localDate < value.effectiveFrom ||
-        override.localDate > value.effectiveTo
+        (value.effectiveTo !== null && override.localDate > value.effectiveTo)
       )
         context.addIssue({
           code: "custom",

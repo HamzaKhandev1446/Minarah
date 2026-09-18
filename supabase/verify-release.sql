@@ -9,6 +9,7 @@ begin
     'public.mosque_distance(uuid,double precision,double precision)',
     'public.save_schedule_draft(uuid,date,date,jsonb,jsonb,jsonb,uuid,integer)',
     'public.publish_schedule(uuid,integer)',
+    'public.publish_schedule_bundle(uuid,integer)',
     'public.ensure_mosque_qr(uuid)',
     'public.submit_mosque(jsonb)',
     'public.submit_mosque_claim(uuid,text,text,text,text,text)',
@@ -43,6 +44,12 @@ begin
     then raise exception 'Missing profile creation trigger'; end if;
   if has_function_privilege('anon', 'public.publish_schedule(uuid,integer)', 'EXECUTE')
     then raise exception 'Anonymous publication must not be granted'; end if;
+  if has_function_privilege('anon', 'public.publish_schedule_bundle(uuid,integer)', 'EXECUTE')
+    or has_function_privilege('authenticated', 'public.publish_schedule_bundle(uuid,integer)', 'EXECUTE')
+    then raise exception 'Internal publisher must remain private'; end if;
+  if exists(select 1 from pg_attribute where attrelid = 'public.jamaat_schedules'::regclass
+    and attname = 'effective_to' and attnotnull and not attisdropped)
+    then raise exception 'Ongoing timetable migration is missing'; end if;
 end $$;
 select 'Required Minarah objects, RLS and anonymous write restrictions verified' as result;
 rollback;

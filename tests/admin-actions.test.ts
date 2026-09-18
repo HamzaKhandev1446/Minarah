@@ -26,7 +26,7 @@ function form(existing = false) {
     "payload",
     JSON.stringify({
       effectiveFrom: "2030-01-01",
-      effectiveTo: "2030-01-31",
+      effectiveTo: null,
       entries: ["fajr", "dhuhr", "asr", "maghrib", "isha"].map((prayer) => ({
         prayer,
         localTime: "12:00",
@@ -48,6 +48,10 @@ it.each([false, true])(
       .mockResolvedValueOnce({ data: id, error: null })
       .mockResolvedValueOnce({ error: { code: "40001" } });
     const state = await saveSchedule(previous, form(existing));
+    expect(rpc).toHaveBeenCalledWith(
+      "save_schedule_draft",
+      expect.objectContaining({ effective_end: null }),
+    );
     expect(rpc).toHaveBeenLastCalledWith("publish_schedule", {
       target_schedule: id,
       expected_revision: existing ? 5 : 1,

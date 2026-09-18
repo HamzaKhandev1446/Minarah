@@ -14,3 +14,4 @@ playwright-report/
 *.log
 
 .vercel
+public/map-worker/

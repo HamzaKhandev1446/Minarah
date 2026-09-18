@@ -37,6 +37,25 @@ export interface DiscoveryResponse {
   radiusMeters: number;
 }
 
+export type JamaatTimingState = "nearly" | "live" | "recent" | null;
+
+/**
+ * Visual timing guidance for a published Jamaat. The boundary is deliberately
+ * narrow: ten minutes before starts green, the first five minutes are red,
+ * and minutes five through seven remain green as a recent start.
+ */
+export function jamaatTimingState(
+  jamaatInstant: string | null,
+  now: string,
+): JamaatTimingState {
+  if (!jamaatInstant) return null;
+  const difference = Date.parse(jamaatInstant) - Date.parse(now);
+  if (difference > 0 && difference <= 10 * 60_000) return "nearly";
+  if (difference <= 0 && difference >= -5 * 60_000) return "live";
+  if (difference < -5 * 60_000 && difference >= -7 * 60_000) return "recent";
+  return null;
+}
+
 export function currentSchedule(result: MosqueResult, now: string) {
   const date = mosqueLocalDate(now, result.mosque.timezone);
   const today = resolveMosqueSchedule({
@@ -54,14 +73,40 @@ export function currentSchedule(result: MosqueResult, now: string) {
   );
   return {
     today,
+    // Timetable reference is visible every day; timing eligibility stays Friday-only.
+    publishedJumuahSessions: [...(base?.jumuahSessions ?? [])].sort(
+      (a, b) => a.position - b.position,
+    ),
     next: getNextJamaat({
       mosqueTimezone: result.mosque.timezone,
       now,
       today,
       tomorrow,
     }),
-    fridaySessions: base?.jumuahSessions ?? [],
+    fridaySessions:
+      Temporal.PlainDate.from(date).dayOfWeek === 5
+        ? (base?.jumuahSessions ?? [])
+        : [],
   };
+}
+
+export function formatPublishedAt(
+  value: string | null | undefined,
+  timezone: string,
+) {
+  if (!value) return "No current schedule published";
+  const date = Temporal.Instant.from(value).toZonedDateTimeISO(timezone);
+  const day = date.day;
+  const suffix =
+    day % 100 >= 11 && day % 100 <= 13
+      ? "th"
+      : ({ 1: "st", 2: "nd", 3: "rd" }[day % 10] ?? "th");
+  const month = new Intl.DateTimeFormat("en-GB", {
+    month: "short",
+    timeZone: timezone,
+  }).format(new Date(value));
+  const minutes = date.minute ? `:${String(date.minute).padStart(2, "0")}` : "";
+  return `Last updated: ${day}${suffix} ${month} ${date.hour % 12 || 12}${minutes} ${date.hour >= 12 ? "pm" : "am"}`;
 }
 
 export function remainingLabel(milliseconds: number) {

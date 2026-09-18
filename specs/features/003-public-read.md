@@ -1,5 +1,7 @@
 # Milestone 3 — public read experience
 
+Date presentation: show the estimated civil Hijri date beneath the Gregorian date in mosque-local time. Label it as estimated because local moon sighting can differ. Avoid repeating the raw timezone identifier in the card header.
+
 Status: implemented, locally verified. Connected Supabase and real-device verification remain pending. Checkboxes below describe implemented acceptance behavior; the evidence table distinguishes local tests from external integration.
 
 Requirements: `DATA-01`, `PUB-01` through `PUB-05`, `SCH-01`, `SCH-02`, `UX-01` from [product requirements](../product.md).
@@ -67,3 +69,5 @@ Implemented in the public repository, API, discovery/detail components and versi
 Database change: `202609070003_public_distance.sql` adds a read-only, RLS-respecting detail-distance RPC. Existing migrations and domain schedule logic are reused.
 
 Decisions: live public reads use a cookie-free anonymous client; demo data never acts as an error fallback; coordinates travel in no-store POST bodies; follows have a 50-mosque browser limit. Details refresh every minute while visible and on focus. See `ARC-09` in [architecture](../architecture.md).
+
+September 18 presentation: remove the generic Mosque Jamaat times heading and external Find mosques link. A prominent white back control with a green arrow sits at the top right inside the mosque card, labelled Back to nearby mosques.

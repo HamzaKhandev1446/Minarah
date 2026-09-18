@@ -66,6 +66,7 @@ beforeAll(async () => {
     "202609080004_onboarding_and_qr.sql",
     "202609090005_registration_moderators.sql",
     "202609090006_registration_classification.sql",
+    "202609160007_ongoing_schedules.sql",
   ])
     await db.exec(await readFile(`supabase/migrations/${file}`, "utf8"));
   await db.exec(await readFile("supabase/seed.sql", "utf8"));
@@ -753,5 +754,247 @@ describe("migrations, PostGIS and row-level security", () => {
         [mosque],
       ),
     ).rejects.toThrow("Unknown IANA timezone");
+  });
+});
+
+it("imports the requested Parsa Citi locations idempotently without schedules", async () => {
+  const sql = await readFile("supabase/add-parsa-citi-mosques.sql", "utf8");
+  await db.exec(sql);
+  await db.exec(sql);
+  const locations = await db.query<{
+    name: string;
+    latitude: number;
+    longitude: number;
+    verification_status: string;
+    is_synthetic: boolean;
+  }>(
+    "select name, latitude, longitude, verification_status, is_synthetic from public.mosques where slug in ('parsa-citi-block-g-masjid','parsa-citi-block-a-masjid') order by name",
+  );
+  expect(locations.rows).toEqual([
+    {
+      name: "Parsa Citi Block A Masjid",
+      latitude: 24.871662970560166,
+      longitude: 67.02411936777554,
+      verification_status: "unverified",
+      is_synthetic: false,
+    },
+    {
+      name: "Parsa Citi Block G Masjid",
+      latitude: 24.870630810049292,
+      longitude: 67.02463726936347,
+      verification_status: "unverified",
+      is_synthetic: false,
+    },
+  ]);
+  const schedules = await db.query(
+    "select s.id from public.jamaat_schedules s join public.mosques m on m.id=s.mosque_id where m.slug in ('parsa-citi-block-g-masjid','parsa-citi-block-a-masjid')",
+  );
+  expect(schedules.rows).toEqual([]);
+});
+
+it("publishes ongoing Block G times and preserves replacement history", async () => {
+  const sql = await readFile(
+    "supabase/publish-parsa-citi-block-g-times.sql",
+    "utf8",
+  );
+  await db.exec(sql);
+  await db.exec(sql);
+  const result = await db.query<{ status: string; id: string }>(
+    "select s.id, s.status from public.jamaat_schedules s join public.mosques m on m.id = s.mosque_id where m.slug = 'parsa-citi-block-g-masjid' order by s.status",
+  );
+  expect(result.rows.map((row) => row.status)).toEqual([
+    "archived",
+    "published",
+  ]);
+  const current = result.rows[1]!.id;
+  await asRole("anon", null, async () => {
+    const entries = await db.query(
+      "select prayer, local_time::text from public.jamaat_schedule_entries where schedule_id = $1 order by local_time",
+      [current],
+    );
+    expect(entries.rows).toEqual([
+      { prayer: "fajr", local_time: "05:45:00" },
+      { prayer: "dhuhr", local_time: "13:30:00" },
+      { prayer: "asr", local_time: "17:30:00" },
+      { prayer: "maghrib", local_time: "18:40:00" },
+      { prayer: "isha", local_time: "20:30:00" },
+    ]);
+    expect(
+      (
+        await db.query(
+          "select local_time::text from public.jumuah_sessions where schedule_id = $1",
+          [current],
+        )
+      ).rows,
+    ).toEqual([{ local_time: "13:30:00" }]);
+  });
+  const audit = await db.query<{
+    change_type: string;
+    previous_value: unknown;
+  }>(
+    "select change_type, previous_value from public.schedule_change_log where schedule_id = $1",
+    [current],
+  );
+  expect(audit.rows[0]!.change_type).toBe("replace");
+  expect(audit.rows[0]!.previous_value).not.toBeNull();
+  const dates = await db.query<{ effective_to: null; published_at: string }>(
+    "select effective_to, published_at::text from public.jamaat_schedules where id = $1",
+    [current],
+  );
+  expect(dates.rows[0]!.effective_to).toBeNull();
+  const prior = await db.query<{ published_at: string }>(
+    "select published_at::text from public.jamaat_schedules where id = $1",
+    [result.rows[0]!.id],
+  );
+  expect(dates.rows[0]!.published_at).not.toBe(prior.rows[0]!.published_at);
+  expect(
+    (
+      await db.query(
+        "select status from public.jamaat_schedules where id = $1",
+        [current],
+      )
+    ).rows,
+  ).toEqual([{ status: "published" }]);
+  expect(
+    (
+      await db.query(
+        "select s.id from public.jamaat_schedules s join public.mosques m on m.id=s.mosque_id where m.slug = 'parsa-citi-block-a-masjid'",
+      )
+    ).rows,
+  ).toEqual([]);
+});
+
+it("keeps ongoing drafts private, restricts publication and updates freshness only on publish", async () => {
+  const target = (
+    await db.query<{ id: string }>(
+      "select id from public.mosques where slug='parsa-citi-block-g-masjid'",
+    )
+  ).rows[0]!.id;
+  await db.query(
+    "insert into public.mosque_members(mosque_id,user_id,role) values ($1,$2,'owner'),($1,$3,'moderator')",
+    [target, member, stranger],
+  );
+  const before = (
+    await db.query<{
+      id: string;
+      published_at: string;
+      effective_from: string;
+    }>(
+      "select id,published_at::text,effective_from::text from public.jamaat_schedules where mosque_id=$1 and status='published'",
+      [target],
+    )
+  ).rows[0]!;
+  let saved = "";
+  const friday = [{ position: 1, localTime: "13:30", label: "Jumuah" }];
+  await asRole("authenticated", stranger, async () => {
+    const result = await db.query<{ id: string }>(
+      "select public.save_schedule_draft($1,$2,null,$3::jsonb,$4::jsonb) as id",
+      [
+        target,
+        before.effective_from,
+        JSON.stringify(prayers),
+        JSON.stringify(friday),
+      ],
+    );
+    saved = result.rows[0]!.id;
+    await expect(
+      db.query("select public.publish_schedule($1,1)", [saved]),
+    ).rejects.toThrow("membership required");
+    await expect(
+      db.query("select public.publish_schedule_bundle($1,1)", [saved]),
+    ).rejects.toThrow("permission denied");
+    await expect(
+      db.query(
+        "select public.save_schedule_draft($1,$2,null,$3::jsonb,'[]'::jsonb)",
+        [target, before.effective_from, JSON.stringify(prayers)],
+      ),
+    ).rejects.toThrow("daily times only");
+  });
+  await asRole("anon", null, async () => {
+    expect(
+      (
+        await db.query("select id from public.jamaat_schedules where id=$1", [
+          saved,
+        ])
+      ).rows,
+    ).toEqual([]);
+    expect(
+      (
+        await db.query(
+          "select published_at::text from public.jamaat_schedules where id=$1",
+          [before.id],
+        )
+      ).rows,
+    ).toEqual([{ published_at: before.published_at }]);
+    await expect(
+      db.query("select public.publish_schedule_bundle($1,1)", [saved]),
+    ).rejects.toThrow("permission denied");
+  });
+  await asRole("authenticated", member, async () => {
+    await expect(
+      db.query("select public.publish_schedule($1,9)", [saved]),
+    ).rejects.toThrow("reload before publishing");
+    await db.query("select public.publish_schedule($1,1)", [saved]);
+  });
+  const after = await db.query<{ id: string; published_at: string }>(
+    "select id,published_at::text from public.jamaat_schedules where mosque_id=$1 and status='published'",
+    [target],
+  );
+  expect(after.rows).toHaveLength(1);
+  expect(after.rows[0]!.id).toBe(saved);
+  expect(after.rows[0]!.published_at).not.toBe(before.published_at);
+});
+
+it("replaces multiple bounded plans with one ongoing bundle and audits every previous version", async () => {
+  const target = (
+    await db.query<{
+      id: string;
+    }>(`insert into public.mosques(slug,name,address_line,city,country_code,latitude,longitude,timezone)
+    values ('ongoing-test','Ongoing test','Test road','Karachi','PK',24.87,67.02,'Asia/Karachi') returning id`)
+  ).rows[0]!.id;
+  await db.query(
+    "insert into public.mosque_members(mosque_id,user_id,role) values ($1,$2,'owner')",
+    [target, member],
+  );
+  await asRole("authenticated", member, async () => {
+    for (const month of ["01", "02"]) {
+      const id = (
+        await db.query<{ id: string }>(
+          "select public.save_schedule_draft($1,$2,$3,$4::jsonb) as id",
+          [
+            target,
+            `2031-${month}-01`,
+            `2031-${month}-28`,
+            JSON.stringify(prayers),
+          ],
+        )
+      ).rows[0]!.id;
+      await db.query("select public.publish_schedule($1,1)", [id]);
+    }
+    const id = (
+      await db.query<{ id: string }>(
+        "select public.save_schedule_draft($1,'2031-01-01',null,$2::jsonb) as id",
+        [target, JSON.stringify(prayers)],
+      )
+    ).rows[0]!.id;
+    await db.query("select public.publish_schedule($1,1)", [id]);
+    const audit = (
+      await db.query<{ previous_value: unknown[] }>(
+        "select previous_value from public.schedule_change_log where schedule_id=$1",
+        [id],
+      )
+    ).rows[0]!;
+    expect(audit.previous_value).toHaveLength(2);
+    expect(
+      (
+        await db.query(
+          "select id from public.jamaat_schedules where mosque_id=$1 and status='published'",
+          [target],
+        )
+      ).rows,
+    ).toEqual([{ id }]);
+    await expect(
+      db.query("select public.publish_schedule($1,1)", [id]),
+    ).rejects.toThrow("reload before publishing");
   });
 });

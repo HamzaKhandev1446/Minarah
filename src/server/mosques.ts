@@ -158,7 +158,9 @@ export async function discoverMosques(
     )
     .eq("status", "published")
     .lte("effective_from", utcDate.add({ days: 2 }).toString())
-    .gte("effective_to", utcDate.subtract({ days: 1 }).toString())
+    .or(
+      `effective_to.is.null,effective_to.gte.${utcDate.subtract({ days: 1 }).toString()}`,
+    )
     .limit(250);
   if (scheduleError)
     throw new DirectoryUnavailable(

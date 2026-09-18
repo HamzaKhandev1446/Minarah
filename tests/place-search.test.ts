@@ -1,5 +1,19 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { placeSchema, searchPlaces } from "@/lib/place-search";
+import { placeSchema, searchPlaces, distinctPlaces } from "@/lib/place-search";
+it("merges nearby duplicate provider pins without merging distant same-name mosques", () => {
+  const base = placeSchema.parse({
+    latitude: 33.729,
+    longitude: 73.037,
+    name: "Faisal Mosque",
+  });
+  expect(
+    distinctPlaces([
+      base,
+      { ...base, latitude: 33.7291 },
+      { ...base, latitude: 34 },
+    ]),
+  ).toEqual([base, { ...base, latitude: 34 }]);
+});
 import { parseSavedPlaces } from "@/lib/follows/places";
 it("bounds and validates locally saved places", () => {
   expect(parseSavedPlaces("invalid")).toEqual([]);

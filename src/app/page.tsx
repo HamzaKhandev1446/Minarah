@@ -1,4 +1,4 @@
-import { Discovery } from "@/components/discovery";
+import { PublicExperience as Discovery } from "@/components/public-experience";
 export const dynamic = "force-dynamic";
 export default async function Home({
   searchParams,

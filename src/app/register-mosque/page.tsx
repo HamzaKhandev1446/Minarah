@@ -39,13 +39,15 @@ export default async function RegisterMosque({
       ? mosque
       : null;
   return (
-    <main id="main" className="detail-shell registration-intro">
-      <p className="eyebrow">For mosque representatives</p>
-      <h1>Register your mosque</h1>
-      <p>
-        Bring your mosque’s Jamaat timetable to your community. Register
-        yourself as its representative and nominate up to two moderators.
-      </p>
+    <main
+      id="main"
+      className="detail-shell registration-intro registration-page"
+    >
+      <div className="registration-page-heading">
+        <p className="eyebrow">Your community, connected</p>
+        <h1>Register your mosque</h1>
+        <p>A few details. A closer community.</p>
+      </div>
       <MosqueRegistration
         key={
           initialPlace
@@ -57,7 +59,7 @@ export default async function RegisterMosque({
         ready={ready}
         initialPlace={initialPlace}
       />
-      <div className="admin-list">
+      <div className="registration-other-options">
         {slug && (
           <article>
             <h2>Claim this listed mosque</h2>
@@ -70,28 +72,17 @@ export default async function RegisterMosque({
             </Link>
           </article>
         )}
-        <article>
-          <h2>Already registered?</h2>
+        <p>
+          Already registered? <Link href="/admin">Manage mosque</Link>
+        </p>
+        <details>
+          <summary>Not a mosque representative?</summary>
           <p>
-            Owners and approved moderators can sign in to their mosque’s
-            timetable.
+            You can suggest a directory listing without requesting management
+            access. <Link href="/submit">Add Mosque</Link>
           </p>
-          <Link className="button secondary" href="/admin">
-            Manage mosque
-          </Link>
-        </article>
-        <article>
-          <h2>Add a missing mosque</h2>
-          <p>
-            Suggest a missing mosque for the directory without requesting
-            management access.
-          </p>
-          <Link href="/submit">Add Mosque</Link>
-        </article>
+        </details>
       </div>
-      <p>
-        <Link href="/?view=map">Find an existing mosque to claim</Link>
-      </p>
     </main>
   );
 }

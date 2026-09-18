@@ -51,7 +51,7 @@ test("map search finds an unregistered place, saves it and passes its pin to reg
 
 test("home opens a map even before a search returns results", async ({
   page,
-}) => {
+}, info) => {
   await page.goto("/");
   await expect(
     page.getByRole("button", { name: "Map & discover", exact: true }),
@@ -61,6 +61,16 @@ test("home opens a map even before a search returns results", async ({
   ).toBeVisible();
   await expect(page.locator(".leaflet-control-zoom-in")).toBeVisible();
   await expect(page.getByLabel("Search by mosque name or city")).toBeVisible();
+  const searchBounds = await page
+    .getByLabel("Search by mosque name or city")
+    .boundingBox();
+  expect(searchBounds!.y + searchBounds!.height).toBeLessThan(
+    page.viewportSize()!.height,
+  );
+  await page.screenshot({
+    path: info.outputPath("map-home.png"),
+    fullPage: true,
+  });
 });
 
 test("search a place, confirm its pin and reach account setup without losing the location", async ({
@@ -103,6 +113,24 @@ test("search a place, confirm its pin and reach account setup without losing the
   await page.getByRole("button", { name: "Confirm mosque location" }).click();
   await expect(page.getByLabel("Email", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute(
+    "autoComplete",
+    "new-password",
+  );
+  await page
+    .getByRole("button", { name: "I already have an account", exact: true })
+    .click();
+  await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute(
+    "autoComplete",
+    "current-password",
+  );
+  await page
+    .getByRole("button", { name: "Create an account", exact: true })
+    .click();
+  await page.screenshot({
+    path: info.outputPath("registration-account.png"),
+    fullPage: true,
+  });
   await page
     .getByLabel("Password", { exact: true })
     .fill("not-stored-test-password");

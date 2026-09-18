@@ -64,7 +64,7 @@ export async function saveSchedule(
       if (publication.error)
         return {
           message:
-            "Draft saved, but publication failed. Reload if another editor changed it; otherwise check for an overlapping effective period. Public times have not changed.",
+            "Draft saved, but publication failed. Reload to check for another editor's changes. Public times have not changed.",
           draftId,
           revision,
           published: false,

@@ -36,7 +36,7 @@ export interface JamaatSchedule {
   id: string;
   mosqueId: string;
   effectiveFrom: string;
-  effectiveTo: string;
+  effectiveTo: string | null;
   status: "draft" | "published" | "archived";
   revision: number;
   publishedAt: string | null;

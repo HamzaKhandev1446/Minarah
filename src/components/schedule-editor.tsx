@@ -16,8 +16,12 @@ export function ScheduleEditor({
 }) {
   const [values, setValues] = useState({
     mosqueId,
-    effectiveFrom: initial?.effectiveFrom ?? localDate,
-    effectiveTo: initial?.effectiveTo ?? localDate,
+    effectiveFrom: initial
+      ? limited || initial.effectiveFrom < localDate
+        ? initial.effectiveFrom
+        : localDate
+      : localDate,
+    effectiveTo: limited ? (initial?.effectiveTo ?? null) : null,
     entries: PRAYERS.map((prayer) => ({
       prayer,
       localTime:
@@ -40,43 +44,16 @@ export function ScheduleEditor({
       <input type="hidden" name="revision" value={state.revision ?? ""} />
       {limited && (
         <p className="notice">
-          Moderator access: edit daily prayer times in an existing period and
+          Moderator access: edit daily prayer times in an existing timetable and
           save a draft. The owner reviews and publishes it. Friday sessions,
           overrides and period dates are read-only.
         </p>
       )}
-      <fieldset disabled={pending || limited}>
-        <legend>Effective period</legend>
-        <div className="form-grid">
-          <label>
-            From
-            <input
-              type="date"
-              required
-              value={values.effectiveFrom}
-              onChange={(e) =>
-                setValues({ ...values, effectiveFrom: e.target.value })
-              }
-            />
-          </label>
-          <label>
-            Through
-            <input
-              type="date"
-              required
-              min={values.effectiveFrom}
-              value={values.effectiveTo}
-              onChange={(e) =>
-                setValues({ ...values, effectiveTo: e.target.value })
-              }
-            />
-          </label>
-        </div>
-        <p className="muted">
-          Replace an existing period using the same dates, or create a
-          non-overlapping new period.
-        </p>
-      </fieldset>
+      <p className="muted">
+        {limited && values.effectiveTo !== null
+          ? "This older timetable has an end date. The owner can publish it without an expiry."
+          : "Published times stay active until changed. Publishing updates the last-published date and replaces any overlapping planned timetable."}
+      </p>
       <fieldset disabled={pending}>
         <legend>Daily Jamaat · local mosque clock time</legend>
         <div className="form-grid">
@@ -169,7 +146,7 @@ export function ScheduleEditor({
                 type="date"
                 required
                 min={values.effectiveFrom}
-                max={values.effectiveTo}
+                max={values.effectiveTo ?? undefined}
                 value={override.localDate}
                 onChange={(e) =>
                   setValues({

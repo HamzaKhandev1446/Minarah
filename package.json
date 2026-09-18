@@ -7,6 +7,8 @@
     "node": ">=22.12.0 <23 || >=24.0.0"
   },
   "scripts": {
+    "predev": "node scripts/prepare-map-worker.mjs",
+    "prebuild": "node scripts/prepare-map-worker.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -30,7 +32,7 @@
     "@js-temporal/polyfill": "0.5.1",
     "@supabase/ssr": "0.12.6",
     "@supabase/supabase-js": "2.116.0",
-    "leaflet": "^1.9.4",
+    "maplibre-gl": "^6.10.0",
     "next": "16.3.4",
     "qrcode": "^1.5.4",
     "react": "19.2.8",
@@ -43,7 +45,6 @@
     "@electric-sql/pglite-postgis": "0.2.8",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.0.0",
-    "@types/leaflet": "^1.9.21",
     "@types/node": "^22.0.0",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.0.0",

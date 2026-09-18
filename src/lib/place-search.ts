@@ -9,6 +9,24 @@ export const placeSchema = z.object({
   countryCode: z.string().max(2).default(""),
 });
 export type SelectedPlace = z.infer<typeof placeSchema>;
+export function distinctPlaces(places: SelectedPlace[]): SelectedPlace[] {
+  return places.filter(
+    (place, index) =>
+      !places.slice(0, index).some((other) => {
+        if (
+          !place.name ||
+          place.name.trim().toLowerCase() !== other.name.trim().toLowerCase()
+        )
+          return false;
+        const latitude = (place.latitude - other.latitude) * 111320;
+        const longitude =
+          (place.longitude - other.longitude) *
+          111320 *
+          Math.cos((place.latitude * Math.PI) / 180);
+        return Math.hypot(latitude, longitude) < 250;
+      }),
+  );
+}
 const responseSchema = z.object({
   features: z
     .array(
@@ -45,7 +63,7 @@ export async function searchPlaces(
     throw new Error(
       "Place search is unavailable. Try again or place the pin manually.",
     );
-  return responseSchema
+  const places = responseSchema
     .parse(await response.json())
     .features.slice(0, 5)
     .map(({ geometry, properties: p }) =>
@@ -61,4 +79,5 @@ export async function searchPlaces(
         countryCode: (p.countrycode || "").toUpperCase(),
       }),
     );
+  return distinctPlaces(places);
 }
