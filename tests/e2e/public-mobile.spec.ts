@@ -145,11 +145,9 @@ test("granted location appears on map without persisting coordinates", async ({
     path: testInfo.outputPath("location.png"),
     fullPage: true,
   });
-  await page
-    .getByRole("button", { name: "Use my location", exact: true })
-    .click();
+  // No second permission action is needed after permission was already granted.
   await expect(
-    page.getByRole("button", { name: "Near your location" }),
+    page.getByRole("button", { name: "your location", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("img", { name: "Your location", exact: true }),

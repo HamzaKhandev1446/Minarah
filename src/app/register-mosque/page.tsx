@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MosqueRegistration } from "@/components/mosque-registration";
+import { MosqueRegistration } from "@/features/onboarding/components/mosque-registration";
 import { getSupabaseConfig } from "@/lib/config";
 import { createClient } from "@/lib/supabase/server";
 import { placeSchema } from "@/lib/place-search";

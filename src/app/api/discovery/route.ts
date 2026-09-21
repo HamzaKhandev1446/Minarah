@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { discoveryQuerySchema } from "@/domain/discovery";
 import { DirectoryUnavailable, discoverMosques } from "@/server/mosques";
+import { reportOperationalEvent } from "@/server/operational-events";
 
 const requestSchema = z.object({
   mode: z.enum(["live", "demo"]),
@@ -57,6 +58,7 @@ export async function POST(request: Request) {
         { error: "Invalid request." },
         { status: 400, headers },
       );
+    const reference = reportOperationalEvent("discovery_unavailable");
     return Response.json(
       {
         error:
@@ -64,7 +66,7 @@ export async function POST(request: Request) {
             ? error.message
             : "Mosque information is temporarily unavailable. Please try again.",
       },
-      { status: 503, headers },
+      { status: 503, headers: { ...headers, "X-Request-Id": reference } },
     );
   }
 }

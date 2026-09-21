@@ -2,7 +2,7 @@ import Link from "next/link";
 import { z } from "zod";
 import { requireUser } from "@/server/auth";
 import { signOut } from "@/app/auth/actions";
-import { NominationForm } from "@/components/nomination-form";
+import { NominationForm } from "@/features/administration/components/nomination-form";
 export const dynamic = "force-dynamic";
 export default async function Admin() {
   const { db, user } = await requireUser();

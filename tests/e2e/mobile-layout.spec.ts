@@ -23,27 +23,28 @@ test("saved Home persists, selects nearby coordinates and can be removed", async
   );
   await page.goto("/");
   await expect(page.getByLabel("Place name", { exact: true })).toHaveCount(0);
+  // Already-granted permission restores the current location automatically.
   await page
-    .getByRole("button", { name: "Use my location", exact: true })
-    .click();
-  await page
-    .getByRole("button", { name: "Near your location", exact: true })
+    .getByRole("button", { name: "your location", exact: true })
     .click();
   await page
     .getByRole("button", { name: "Save this place", exact: true })
     .click();
-  await expect(page.getByRole("dialog").locator("input")).toHaveCount(1);
+  await expect(
+    page.getByRole("dialog").getByLabel("Place name", { exact: true }),
+  ).toHaveCount(1);
   await page.getByLabel("Place name", { exact: true }).fill("Home");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.reload();
-  await page
-    .getByRole("button", { name: "Choose your location", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Home", exact: true }).click();
   const request = page.waitForRequest((request) =>
     request.url().includes("/api/discovery"),
   );
-  await page.getByRole("button", { name: "Home", exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Home Saved location", exact: true })
+    .click();
   expect((await request).postDataJSON().query).toEqual({
     kind: "nearby",
     latitude: 24.870630810049292,
@@ -60,7 +61,9 @@ test("saved Home persists, selects nearby coordinates and can be removed", async
     .getByRole("button", { name: "Delete saved place Home", exact: true })
     .click();
   await expect(
-    page.getByRole("button", { name: "Home", exact: true }),
+    page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Home Saved location", exact: true }),
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Close location selector" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -140,11 +143,11 @@ test("prominent logo and map take priority over the location panel", async ({
   );
   await page.goto("/");
   await expect(page.locator("[data-map-loaded=true]")).toBeVisible();
-  const logo = await page.locator(".site-header .brand svg").boundingBox();
+  const logo = await page.locator(".public-topbar .brand svg").boundingBox();
   const map = await page.locator(".nearby-map").boundingBox();
   const panel = await page.locator(".location-explanation").boundingBox();
-  expect(logo!.width).toBeGreaterThanOrEqual(200);
-  expect(logo!.height).toBeGreaterThanOrEqual(78);
+  expect(logo!.width).toBe(25);
+  expect(logo!.height).toBe(50);
   expect(map!.height).toBeGreaterThanOrEqual(400);
   expect(map!.height).toBeGreaterThan(panel!.height * 1.7);
   expect(panel!.height).toBeLessThan(270);

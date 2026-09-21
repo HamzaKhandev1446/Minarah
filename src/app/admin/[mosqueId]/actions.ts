@@ -3,6 +3,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireMember } from "@/server/auth";
 import { scheduleDraftSchema } from "@/domain/validation";
+import { reportOperationalEvent } from "@/server/operational-events";
 export interface EditorState {
   message: string;
   draftId: string | null;
@@ -61,7 +62,8 @@ export async function saveSchedule(
         target_schedule: draftId,
         expected_revision: revision,
       });
-      if (publication.error)
+      if (publication.error) {
+        reportOperationalEvent("publication_failed");
         return {
           message:
             "Draft saved, but publication failed. Reload to check for another editor's changes. Public times have not changed.",
@@ -69,6 +71,7 @@ export async function saveSchedule(
           revision,
           published: false,
         };
+      }
       revalidatePath(`/admin/${mosqueId}`);
       revalidatePath("/", "layout");
       return {

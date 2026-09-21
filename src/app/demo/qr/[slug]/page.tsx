@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { demoQrCode, siteOrigin } from "@/server/qr";
-import { QrPoster } from "@/components/qr-poster";
+import { QrPoster } from "@/features/administration/components/qr-poster";
 import pilot from "@/data/pilot.json";
 export default async function DemoPoster({
   params,

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/server/auth";
 import { discoverMosques } from "@/server/mosques";
-import { ClaimForm } from "@/components/claim-form";
+import { ClaimForm } from "@/features/onboarding/components/claim-form";
 export const dynamic = "force-dynamic";
 export default async function ClaimPage({
   params,

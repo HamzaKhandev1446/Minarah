@@ -1,4 +1,5 @@
 import { beforeEach, expect, it, vi } from "vitest";
+vi.mock("server-only", () => ({}));
 const { rpc, requireMember, revalidatePath } = vi.hoisted(() => ({
   rpc: vi.fn(),
   requireMember: vi.fn(),

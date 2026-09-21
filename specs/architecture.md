@@ -1,5 +1,13 @@
 # Architecture and accepted decisions
 
+## ARC-12 — feature ownership and regression baseline (September 18)
+
+Feature UI lives in `src/features/{discovery,locations,maps,navigation,installation,onboarding,administration,account}`. Routes remain in `src/app`; shared primitives and transient public context remain in `src/components`. See [feature ownership](../src/features/README.md). Direct module imports preserve client/server boundaries; no barrels mix database repositories into client bundles. Existing explicitly marked server actions remain the mutation interface, with unchanged authorization and transactional SQL.
+
+`domain/timetable.ts` owns six-column presentation eligibility, Friday replacement and the shared Arabic live label; `domain/schedule.ts` remains authoritative for schedule resolution and next Jamaat. Public screen request sequencing is isolated in `features/discovery/hooks/use-discovery-query.ts`, while card rendering is separate from location/navigation orchestration. HTTP discovery responses are validated at `lib/discovery-response.ts`; failed validation never activates demo data or renders private drafts.
+
+Lint prevents domain-to-adapter/UI imports and feature-to-repository/route imports. CI runs lint, generated-route typechecking, all unit/database tests and production build without deployment credentials. Existing stylesheet order is retained to avoid unverified visual changes. Hosted auth, real browser interactions and background notification delivery remain separate release checks, not claims made by this refactor.
+
 ## Public map provider — September 16, 2026
 
 MapLibre GL JS and OpenFreeMap Positron replace Google Maps and Leaflet. No map API key or billing account is required. Geography rendering never supplies Jamaat times. Registration shares click/drag selection; Photon search remains separate. Keep attribution, handle WebGL/network failures, and never cache map regions for offline use. Hosting is best-effort rather than guaranteed.

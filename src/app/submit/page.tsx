@@ -1,4 +1,4 @@
-import { SubmissionForm } from "@/components/submission-form";
+import { SubmissionForm } from "@/features/onboarding/components/submission-form";
 import { getSupabaseConfig } from "@/lib/config";
 export const dynamic = "force-dynamic";
 export default function SubmitPage() {

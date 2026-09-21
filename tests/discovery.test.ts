@@ -21,15 +21,28 @@ const now = "2026-09-07T18:00:00Z";
 const id = "00000000-0000-4000-8000-000000000001";
 describe("public discovery", () => {
   it("formats publication in the mosque timezone with ordinal dates", () => {
-    expect(formatPublishedAt("2026-09-09T13:00:00Z", "Asia/Karachi")).toBe("Last updated: 9th Sept 6 pm");
-    expect(formatPublishedAt("2026-09-21T08:35:00Z", "Asia/Karachi")).toBe("Last updated: 21st Sept 1:35 pm");
+    expect(formatPublishedAt("2026-09-09T13:00:00Z", "Asia/Karachi")).toBe(
+      "Last updated: 9th Sept 6 pm",
+    );
+    expect(formatPublishedAt("2026-09-21T08:35:00Z", "Asia/Karachi")).toBe(
+      "Last updated: 21st Sept 1:35 pm",
+    );
   });
   it("activates Jumuah only on the mosque's local Friday", async () => {
-    for (const [instant, friday] of [["2026-09-17T18:00:00Z", false], ["2026-09-17T20:00:00Z", true]] as const) {
-      const data = await discoverMosques({kind: "search", query: "Cedar"}, "demo", instant);
+    for (const [instant, friday] of [
+      ["2026-09-17T18:00:00Z", false],
+      ["2026-09-17T20:00:00Z", true],
+    ] as const) {
+      const data = await discoverMosques(
+        { kind: "search", query: "Cedar" },
+        "demo",
+        instant,
+      );
       const result = data.results[0];
       if (!result) throw new Error("Missing demo fixture");
-      expect(currentSchedule(result, instant).fridaySessions.length > 0).toBe(friday);
+      expect(currentSchedule(result, instant).fridaySessions.length > 0).toBe(
+        friday,
+      );
     }
   });
   it("classifies the Jamaat timing windows", () => {

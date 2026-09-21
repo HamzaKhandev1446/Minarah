@@ -1,5 +1,15 @@
 # Implementation status
 
+## Maintainability refactor — September 18, 2026
+
+Completed the behavior-preserving structural refactor described in [018](features/018-maintainability-refactor.md). Relocated 23 components into eight feature folders, extracted nearby/favourite card rendering and discovery request state, centralized the six-column timetable model and Arabic live label, added runtime validation at the discovery HTTP boundary, enforced dependency direction with ESLint, and added a non-deploying GitHub quality workflow. Typecheck now generates Next route types before checking a clean checkout.
+
+Baseline before refactoring: 90/92 tests passed. Two stale Block G fixtures still contained Block A's times; corrected those expectations and the moderator's Friday fixture to the supplied Block G schedule without changing SQL or database permissions. Final verification: **106 tests across 15 files passed**, zero-warning whole-repository ESLint passed, source/test formatting passed, route type generation and strict TypeScript passed, and production build passed. A static React-render regression verifies six columns, Friday badge, Arabic live text, mosque link and favourite control. `git diff --check` passed.
+
+No app server was started/restarted, no deployment or hosted database write was performed, and existing staged changes were preserved. Browser visual/interaction verification, hosted auth/publication and real-device PWA checks remain pending. GitHub CI itself has not run remotely. Stylesheet order is unchanged; a visually verified CSS split remains a follow-up, not part of this completed extraction. No usage-threshold detector, cooldown timer or automatic continuation was configured.
+
+Continuation checkpoint: the refactor has no failing local checks. Start any follow-up from feature ownership in `src/features/README.md`, then perform browser regression against the user's running server before changing CSS or extending functionality. Old `src/components` feature imports were updated; shared primitives/context remain there. Do not reset the existing staged work or claim background push is implemented.
+
 September 18 prayer-label correction: replaced literal question marks with Arabic قَدْ قَامَتِ الصَّلَاةُ in the live prayer cell. Friday Dhuhr now has a compact highlighted Jummah badge instead of Today is Jummah. All six columns remain rendered, including the separate last Jumuah entry; Friday Dhuhr uses published Jumuah time. Production build and TypeScript passed. Visual browser verification pending; no server started or restarted.
 
 September 18 permanent Jumuah entry: retained the final Jumuah column on Fridays and made the board's bottom Jumuah section show the current published sessions every day. Friday Dhuhr still displays Jummah times with its Today is Jummah note. Published reference sessions are separate from Friday-only timing eligibility. All 30 schedule/discovery tests passed; browser visual verification pending. No server started or restarted.

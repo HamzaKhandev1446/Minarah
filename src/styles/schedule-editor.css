@@ -1,0 +1,32 @@
+.schedule-publish-preview {
+  padding: 20px;
+  border: 1px solid #b9cfb4;
+  border-radius: 16px;
+  background: #f2f6ec;
+  color: #193f34;
+}
+.schedule-publish-preview h3 {
+  margin-top: 0;
+  font-size: 20px;
+}
+.schedule-publish-preview p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.schedule-publish-preview dl {
+  margin: 16px 0;
+}
+.schedule-publish-preview dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid #dce5d7;
+}
+.schedule-publish-preview dd {
+  margin: 0;
+  font-weight: 650;
+}
+.schedule-publish-preview li {
+  padding-block: 5px;
+}

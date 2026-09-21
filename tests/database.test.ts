@@ -813,11 +813,11 @@ it("publishes ongoing Block G times and preserves replacement history", async ()
       [current],
     );
     expect(entries.rows).toEqual([
-      { prayer: "fajr", local_time: "05:45:00" },
-      { prayer: "dhuhr", local_time: "13:30:00" },
-      { prayer: "asr", local_time: "17:30:00" },
-      { prayer: "maghrib", local_time: "18:40:00" },
-      { prayer: "isha", local_time: "20:30:00" },
+      { prayer: "fajr", local_time: "05:30:00" },
+      { prayer: "dhuhr", local_time: "13:15:00" },
+      { prayer: "asr", local_time: "17:15:00" },
+      { prayer: "maghrib", local_time: "18:42:00" },
+      { prayer: "isha", local_time: "20:15:00" },
     ]);
     expect(
       (
@@ -826,7 +826,7 @@ it("publishes ongoing Block G times and preserves replacement history", async ()
           [current],
         )
       ).rows,
-    ).toEqual([{ local_time: "13:30:00" }]);
+    ).toEqual([{ local_time: "13:45:00" }]);
   });
   const audit = await db.query<{
     change_type: string;
@@ -885,7 +885,7 @@ it("keeps ongoing drafts private, restricts publication and updates freshness on
     )
   ).rows[0]!;
   let saved = "";
-  const friday = [{ position: 1, localTime: "13:30", label: "Jumuah" }];
+  const friday = [{ position: 1, localTime: "13:45", label: "Jumuah" }];
   await asRole("authenticated", stranger, async () => {
     const result = await db.query<{ id: string }>(
       "select public.save_schedule_draft($1,$2,null,$3::jsonb,$4::jsonb) as id",

@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Brand } from "@/components/brand";
 import { PublicProvider } from "@/components/public-context";
-import { AppNavigation } from "@/components/app-navigation";
+import { AppNavigation } from "@/features/navigation/components/app-navigation";
 import "./globals.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./public-mobile.css";

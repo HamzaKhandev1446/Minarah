@@ -1,0 +1,326 @@
+.notification-settings {
+  margin: 12px 24px;
+  font-size: 13px;
+}
+.background-alerts {
+  margin: 16px;
+  padding: 16px;
+  border: 1px solid #dfe5d8;
+  border-radius: 14px;
+}
+.background-alerts h4 {
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+.background-alerts p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #627669;
+}
+.background-alerts [role="status"]:empty {
+  display: none;
+}
+.notification-settings summary {
+  cursor: pointer;
+  padding: 10px 0;
+}
+.notification-settings fieldset {
+  border: 1px solid #dfe5d8;
+  border-radius: 14px;
+  padding: 16px;
+}
+.notification-settings label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-block: 12px;
+}
+.notification-settings input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+}
+
+body:has(.public-mobile) .site-header {
+  display: none;
+}
+body:has(.public-mobile) .brand > svg {
+  width: 25px;
+  height: 50px;
+  min-width: 25px;
+}
+.public-topbar {
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr) 50px;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+}
+.header-location {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  color: #526b5c;
+  text-align: center;
+  cursor: pointer;
+}
+.header-location > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.header-location > svg {
+  flex: 0 0 auto;
+}
+.header-location-chevron {
+  transition: transform 160ms ease;
+}
+.header-location:hover .header-location-chevron {
+  transform: translateY(2px);
+}
+.header-location:focus-visible {
+  outline: 3px solid #76a88d;
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+.drawer-toggle {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: #193f34;
+  cursor: pointer;
+}
+.public-drawer {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  padding: max(24px, env(safe-area-inset-top)) 20px
+    max(24px, env(safe-area-inset-bottom));
+  background: #f8f7f2;
+  color: #193f34;
+  overflow-y: auto;
+}
+.public-drawer[open] {
+  animation: drawer-enter 0.2s ease-out;
+}
+.drawer-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+.drawer-content {
+  max-width: 560px;
+  margin: 0 auto;
+}
+.drawer-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.drawer-brand h2 {
+  font-size: 25px;
+  font-weight: 650;
+  letter-spacing: -0.8px;
+  margin: 0;
+}
+.drawer-brand p {
+  color: #64776c;
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+.drawer-heading .drawer-toggle {
+  border: 1px solid #dde4d9;
+  border-radius: 50%;
+  background: white;
+}
+.drawer-section-label {
+  margin: 28px 4px 12px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #738376;
+}
+.public-drawer .drawer-group {
+  margin: 0;
+  border: 1px solid #e0e6dc;
+  border-radius: 22px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 4px 20px #193f3404;
+}
+.public-drawer nav {
+  display: grid;
+  gap: 0;
+}
+.public-drawer nav > * + * {
+  border-top: 1px solid #edf0e9;
+}
+.menu-row-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #edf2e8;
+  color: #315e49;
+  flex-shrink: 0;
+}
+.menu-row-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.menu-row-copy strong {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.menu-row-copy > span {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #738175;
+}
+.menu-row-chevron {
+  display: flex;
+  color: #839588;
+  transition: transform 160ms ease;
+}
+.public-drawer details[open] > summary .menu-row-chevron {
+  transform: rotate(90deg);
+}
+.public-drawer summary::-webkit-details-marker {
+  display: none;
+}
+.public-drawer summary::marker {
+  content: "";
+}
+.public-drawer summary:hover,
+.public-drawer nav a:hover,
+.public-drawer nav button:hover {
+  background: #f5f7f1;
+}
+.public-drawer :is(a, button, summary, select):focus-visible {
+  outline: 3px solid #76a88d;
+  outline-offset: -3px;
+}
+.public-drawer .notification-settings,
+.public-drawer .install-guide > details {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+}
+.public-drawer .notification-settings {
+  border-top: 1px solid #edf0e9;
+}
+.public-drawer .notification-settings fieldset {
+  margin: 0 16px 16px;
+  padding: 16px;
+  background: #f8faf5;
+  border: 0;
+  border-radius: 14px;
+  min-width: 0;
+}
+.public-drawer .notification-settings legend {
+  float: left;
+  width: 100%;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.public-drawer .notification-settings fieldset > p {
+  clear: both;
+}
+.public-drawer .notification-settings p,
+.public-drawer .install-instructions p {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #627669;
+}
+.public-drawer .notification-settings label {
+  padding-block: 8px;
+  gap: 12px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+.public-drawer .notification-settings input {
+  accent-color: #193f34;
+}
+.public-drawer .notification-settings select {
+  padding: 10px;
+  background: white;
+  border: 1px solid #d8e1d3;
+  border-radius: 10px;
+  color: #193f34;
+  font: inherit;
+  max-width: 100%;
+}
+.public-drawer .notification-settings > p {
+  margin: 12px 20px;
+}
+.public-drawer .notification-settings > p:empty {
+  display: none;
+}
+.public-drawer .button {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+.public-drawer .install-instructions {
+  padding: 0 20px 16px;
+}
+.drawer-footer {
+  text-align: center;
+  color: #7b8b7e;
+  font-size: 12px;
+  margin: 36px 0 12px;
+}
+.public-drawer nav a,
+.public-drawer nav button,
+.public-drawer details > summary {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 12px;
+  min-height: 92px;
+  width: 100%;
+  text-align: left;
+  padding: 18px 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #193f34;
+  text-decoration: none;
+  font: inherit;
+  cursor: pointer;
+}
+@keyframes drawer-enter {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-drawer[open] {
+    animation: none;
+  }
+}

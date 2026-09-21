@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { z } from "zod";
 import { requirePlatformAdmin } from "@/server/auth";
-import { ReviewForm } from "@/components/review-form";
+import { ReviewForm } from "@/features/administration/components/review-form";
 export const dynamic = "force-dynamic";
 export default async function Platform() {
   const { db } = await requirePlatformAdmin();

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { requireMember } from "@/server/auth";
 import { siteOrigin } from "@/server/qr";
-import { QrPoster } from "@/components/qr-poster";
+import { QrPoster } from "@/features/administration/components/qr-poster";
 export const dynamic = "force-dynamic";
 export default async function AdminQr({
   params,

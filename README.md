@@ -20,7 +20,13 @@ In Supabase Auth, set Site URL to `https://minarah-seven.vercel.app` and allow b
 
 Phase 1 workflows are implemented: public discovery/follows, QR resolution and posters, authentication, authorized schedule editing/publication, mosque submissions and claims, platform review, and a minimal PWA offline fallback. See [status](specs/STATUS.md) for verification and remaining release checks. Hosted search and QR connectivity passed; authenticated hosted workflows still require verification.
 
-## Run locally
+## Code organization
+
+Routes and server-action entry points live in `src/app`. Product UI is grouped under `src/features`; shared components remain in `src/components`, pure rules in `src/domain`, adapters in `src/lib`, and database repositories in `src/server`. Read [feature ownership](src/features/README.md) and the [refactor contract](specs/features/018-maintainability-refactor.md) before extending these boundaries.
+
+The quality workflow runs on pull requests and main/master pushes. It does not deploy or require live credentials. `npm run typecheck` generates Next route types first, so it also works on a clean checkout before the first build.
+
+## Local commands
 
 Use Node **22.12+ (22 LTS)** or Node 24+; `.nvmrc` selects 22. The existing machine's Node 20 is below the dependency requirement. No global runtime changes are required to use a compatible Node installation.
 

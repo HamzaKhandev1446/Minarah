@@ -3,6 +3,7 @@ import type {
   DiscoveryQuery,
   DiscoveryResponse,
 } from "@/domain/discovery";
+import { discoveryResponseSchema } from "./discovery-response";
 export async function fetchDiscovery(
   query: DiscoveryQuery,
   mode: DataMode,
@@ -15,12 +16,25 @@ export async function fetchDiscovery(
     cache: "no-store",
     signal: signal ?? AbortSignal.timeout(15000),
   });
-  const payload = await response.json();
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error("Could not load mosque information. Please try again.");
+  }
   if (!response.ok)
     throw new Error(
-      typeof payload.error === "string"
+      payload !== null &&
+        typeof payload === "object" &&
+        "error" in payload &&
+        typeof payload.error === "string"
         ? payload.error
         : "Could not load mosque information.",
     );
-  return payload as DiscoveryResponse;
+  const parsed = discoveryResponseSchema.safeParse(payload);
+  if (!parsed.success)
+    throw new Error(
+      "Mosque information is temporarily unavailable. Please try again.",
+    );
+  return parsed.data;
 }

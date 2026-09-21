@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AuthForm } from "@/components/auth-form";
+import { AuthForm } from "@/features/account/components/auth-form";
 import { getSupabaseConfig } from "@/lib/config";
 export const dynamic = "force-dynamic";
 export default async function Login({

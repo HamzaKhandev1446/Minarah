@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { MosqueDetail } from "@/components/mosque-detail";
+import { MosqueDetail } from "@/features/discovery/components/mosque-detail";
 import { discoverMosques } from "@/server/mosques";
 export const dynamic = "force-dynamic";
 export default async function MosquePage({

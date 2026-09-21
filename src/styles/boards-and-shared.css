@@ -1,0 +1,769 @@
+.home-tabs {
+  display: flex;
+  gap: 10px;
+  margin-block: 22px;
+}
+.board-shell {
+  max-width: 1100px;
+  margin-inline: auto;
+  padding: 24px 20px 60px;
+}
+.board-back {
+  margin-block-end: 20px;
+}
+.mosque-board {
+  color: #effaf9;
+  background:
+    linear-gradient(100deg, #041720ed 5%, #051b23bc 65%, #071b2266),
+    url("/mosque-backdrop.webp") center / cover;
+  border: 1px solid #24565a;
+  border-radius: 20px;
+  padding: clamp(22px, 4vw, 46px);
+  box-shadow: 0 22px 60px #001d2926;
+  overflow: hidden;
+}
+.board-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 28px;
+  border-bottom: 1px solid #67d4c343;
+  padding-bottom: 22px;
+}
+.board-header h2 {
+  font-size: clamp(26px, 3.7vw, 42px);
+  letter-spacing: -1px;
+  line-height: 1.2;
+  margin: 8px 0 12px;
+  overflow-wrap: anywhere;
+}
+.board-header p {
+  margin: 6px 0;
+}
+.board-header .eyebrow {
+  color: #8ae7d4;
+  font-size: 10px;
+}
+.board-clock .hijri-date {
+  line-height: 1.5;
+}
+.board-dates {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+.board-clock .board-dates p {
+  font-size: clamp(10px, 2.8vw, 12px);
+  margin: 0;
+  white-space: nowrap;
+}
+.board-name-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.board-name-row h2 {
+  min-width: 0;
+}
+.board-directions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 44px;
+  min-height: 44px;
+  color: #8ae7d4;
+  border-radius: 50%;
+  text-decoration: none;
+}
+.board-directions:hover {
+  color: white;
+  background: #ffffff12;
+}
+.board-directions:focus-visible {
+  outline: 3px solid #8ae7d4;
+  outline-offset: 3px;
+}
+.board-clock {
+  text-align: end;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.board-clock time {
+  font-size: clamp(22px, 3vw, 34px);
+  font-weight: 600;
+}
+.board-clock p,
+.board-clock small {
+  color: #d2e2e5;
+  font-size: 13px;
+}
+.board-main {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 28px;
+  align-items: center;
+  margin-block: 24px;
+}
+.board-section-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #c0dbdc;
+  margin: 0 0 12px;
+}
+.board-prayers {
+  margin: 0;
+}
+.board-prayers > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 12px;
+  border-radius: 6px;
+  font-size: clamp(18px, 2.4vw, 26px);
+}
+.board-prayers dt small {
+  display: block;
+  font-size: 10px;
+  color: #a9f0df;
+}
+.board-prayers dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.board-active {
+  background: #007c7066;
+  box-shadow: inset 3px 0 #60e8c8;
+}
+.board-next {
+  text-align: center;
+  background: #00171ce8;
+  border: 1px solid #329d89;
+  border-radius: 10px;
+  padding: 26px 16px;
+}
+.board-next h3 {
+  color: #78f0d1;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 18px;
+}
+.board-next-name {
+  font-size: clamp(26px, 3vw, 38px);
+  margin: 4px 0;
+}
+.board-next-time {
+  font-size: clamp(28px, 3.8vw, 46px);
+  font-weight: 600;
+  color: #78f0d1;
+  margin: 8px 0;
+  font-variant-numeric: tabular-nums;
+}
+.board-next > p:last-child {
+  color: #d8ebed;
+  font-size: 14px;
+}
+.board-friday {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 26px;
+  align-items: center;
+  padding-block: 20px;
+  border-block: 1px solid #67d4c343;
+}
+.board-friday h3 {
+  margin: 0;
+  font-size: 22px;
+}
+.board-friday > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  font-size: 22px;
+}
+.board-friday small {
+  font-size: 12px;
+}
+.board-footer {
+  position: relative;
+  padding-top: 14px;
+}
+.board-footer > p {
+  font-size: 12px;
+  color: #cbdddd;
+}
+.board-footer .follow-control {
+  display: inline-grid;
+  margin: 10px 18px 0 0;
+}
+.board-footer .follow-control .muted {
+  color: #d5ebe6;
+}
+.board-footer .button {
+  background: #b9f2de;
+  color: #052d29;
+  border-color: #b9f2de;
+}
+.board-details-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 13px;
+}
+.board-demo {
+  border: 1px solid #c2b481;
+  background: #302a15d9;
+  color: #fff2c9;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.mosque-tile {
+  border: 1px solid #d5dfd8;
+  border-radius: 18px;
+  background: white;
+  overflow: hidden;
+}
+.mosque-tile-open {
+  display: block;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: white;
+  cursor: pointer;
+  width: 100%;
+  text-align: start;
+  font: inherit;
+}
+.tile-banner {
+  display: flex;
+  align-items: flex-end;
+  min-height: 125px;
+  padding: 18px;
+  background:
+    linear-gradient(90deg, #061c27aa, #061c2722),
+    url("/mosque-backdrop.webp") center 47% / cover;
+  color: white;
+}
+.tile-banner > span {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  background: #001923b8;
+  padding: 7px 10px;
+  border-radius: 20px;
+}
+.tile-copy {
+  display: grid;
+  gap: 8px;
+  padding: 20px;
+}
+.tile-copy > strong {
+  font-size: 22px;
+}
+.tile-copy > span {
+  font-size: 13px;
+}
+.tile-next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 12px;
+  border-top: 1px solid #e1e9e1;
+  padding-top: 18px;
+}
+.tile-next small {
+  display: block;
+  color: #53675e;
+  margin-top: 5px;
+}
+.tile-next b {
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+.mosque-tile > .follow-control {
+  margin: 0 20px 20px;
+}
+.mosque-map {
+  height: 420px;
+  border-radius: 16px;
+  background: #e4e9e2;
+  z-index: 0;
+}
+.map-panel {
+  margin-block: 22px 32px;
+}
+.mosque-pin span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50% 50% 50% 3px;
+  border: 3px solid white;
+  box-shadow: 0 3px 12px #002a3544;
+  background: #174f46;
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+}
+.leaflet-control-attribution {
+  max-width: 100%;
+  font-size: 11px !important;
+}
+.registration-intro {
+  max-width: 720px;
+}
+.install-guide {
+  font-size: 14px;
+  line-height: 1.8;
+}
+@media (max-width: 640px) {
+  .board-shell {
+    padding: 18px 12px 40px;
+  }
+  .mosque-board {
+    padding: 22px 18px;
+    background-position: 65% center;
+    border-radius: 14px;
+  }
+  .board-header {
+    flex-direction: column;
+    gap: 14px;
+  }
+  .board-clock {
+    text-align: start;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 5px 12px;
+  }
+  .board-clock small {
+    width: 100%;
+  }
+  .board-main {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    margin-block: 18px;
+  }
+  .board-prayers > div {
+    font-size: 21px;
+    padding: 12px 10px;
+  }
+  .board-next {
+    padding: 18px 12px;
+  }
+  .board-next h3 {
+    margin-bottom: 8px;
+  }
+  .board-next-name {
+    font-size: 25px;
+  }
+  .board-next-time {
+    font-size: 35px;
+  }
+  .board-friday > div {
+    font-size: 19px;
+  }
+  .mosque-map {
+    height: 340px;
+  }
+}
+
+.main-nav {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+.main-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.form-stack {
+  display: grid;
+  gap: 20px;
+  margin-block: 24px;
+}
+.form-stack label {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-block: 10px;
+}
+.form-stack input,
+.form-stack select,
+.form-stack textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #91a294;
+  border-radius: 8px;
+  padding: 12px;
+  font: inherit;
+  font-weight: 400;
+  background: white;
+  color: #193c36;
+  min-height: 46px;
+}
+.form-stack fieldset {
+  border: 1px solid #cfdbcc;
+  border-radius: 12px;
+  padding: 20px;
+  min-width: 0;
+  background: #fff;
+}
+.form-stack legend {
+  font-weight: 600;
+  padding-inline: 8px;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.form-row {
+  display: flex;
+  gap: 16px;
+  align-items: end;
+  margin-block: 14px;
+}
+.form-row label {
+  flex: 1;
+  margin: 0;
+}
+.override-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  border-block-end: 1px solid #dce3d8;
+  padding-block: 14px;
+}
+.override-row button {
+  grid-column: 1/-1;
+  justify-self: start;
+}
+.admin-list {
+  display: grid;
+  gap: 20px;
+  margin-block: 24px;
+}
+.admin-list article {
+  background: #fff;
+  border: 1px solid #dce3d8;
+  border-radius: 12px;
+  padding: 24px;
+  overflow-wrap: anywhere;
+}
+.admin-list h2,
+.admin-list h3 {
+  margin-block: 0 12px;
+}
+details {
+  padding: 16px;
+  margin-block: 16px;
+  border: 1px solid #cbd7c8;
+  border-radius: 8px;
+}
+summary {
+  cursor: pointer;
+  min-height: 32px;
+}
+pre {
+  overflow: auto;
+  max-height: 360px;
+  font-size: 12px;
+  background: #edf1e8;
+  padding: 16px;
+}
+.qr-poster {
+  text-align: center;
+  border: 1px solid #cbd7c8;
+  border-radius: 16px;
+  padding: 32px;
+  background: white;
+  margin-block-end: 24px;
+}
+.qr-poster .brand {
+  justify-content: center;
+}
+.qr-poster img {
+  display: block;
+  margin-inline: auto;
+  width: min(100%, 320px);
+  height: auto;
+}
+.qr-poster h1 {
+  font-size: 32px;
+}
+.qr-poster h2 {
+  font-size: 22px;
+}
+.qr-url {
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.honeypot {
+  position: absolute;
+  inset-inline-start: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+@media (max-width: 640px) {
+  .header-inner {
+    flex-wrap: wrap;
+  }
+  .main-nav {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-row {
+    flex-wrap: wrap;
+  }
+  .override-row {
+    grid-template-columns: 1fr;
+  }
+  .form-stack fieldset {
+    padding: 14px;
+  }
+  .qr-poster {
+    padding: 20px;
+  }
+}
+@media print {
+  .site-header,
+  .site-footer,
+  .skip-link,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+    color: black;
+  }
+  .detail-shell {
+    padding: 0;
+    max-width: none;
+  }
+  .qr-poster {
+    border: 0;
+    box-shadow: none;
+    break-inside: avoid;
+    color: black;
+  }
+  .qr-poster a {
+    color: black;
+    text-decoration: none;
+  }
+}
+
+.directory-shell {
+  max-width: 1140px;
+  margin-inline: auto;
+  padding: 40px 24px 64px;
+}
+.detail-shell {
+  max-width: 720px;
+  margin-inline: auto;
+  padding: 32px 24px 64px;
+}
+.detail-shell h1 {
+  font-size: 36px;
+  letter-spacing: -1px;
+}
+.discovery-intro h1 {
+  font-size: clamp(38px, 5vw, 58px);
+  margin-block: 14px;
+}
+.discovery-intro .intro-copy {
+  max-width: none;
+}
+.notice {
+  background: #eef1e9;
+  border: 1px solid #d6dfcd;
+  border-radius: 12px;
+  padding: 18px;
+  margin-block: 20px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.notice a {
+  text-decoration: underline;
+}
+.error {
+  background: #fff2ee;
+  border-color: #d4a99c;
+  color: #763623;
+}
+.discovery-controls {
+  padding: 24px;
+  background: white;
+  border: 1px solid #dce3d8;
+  border-radius: 16px;
+  margin-block: 24px 32px;
+}
+.discovery-controls > p {
+  line-height: 1.6;
+  margin-block-start: 0;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 46px;
+  padding: 12px 18px;
+  border-radius: 9px;
+  background: #174f46;
+  border: 1px solid #174f46;
+  color: white;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+.button.secondary {
+  background: #f5f7f0;
+  border-color: #c5d3c0;
+  color: #21483c;
+}
+.button:hover {
+  filter: brightness(0.94);
+}
+.button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.discovery-controls label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-block: 20px 10px;
+}
+.search-row {
+  display: flex;
+  gap: 10px;
+}
+.search-row input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #9aa99b;
+  padding: 12px;
+  border-radius: 9px;
+  font: inherit;
+  min-height: 46px;
+}
+.results-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-block-end: 20px;
+}
+.results-heading h2 {
+  font-size: 24px;
+  font-weight: 500;
+  margin: 0;
+}
+.mosque-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 24px;
+}
+.mosque-grid > :first-child {
+  border-color: #6f9482;
+  box-shadow: 0 8px 26px #174f4615;
+}
+.empty-state {
+  padding: 32px 20px;
+  border: 1px dashed #b6c3af;
+  border-radius: 12px;
+  line-height: 1.8;
+}
+.follow-control {
+  display: grid;
+  gap: 8px;
+  margin-block-start: 22px;
+}
+.follow-control .muted:empty {
+  display: none;
+}
+.countdown {
+  font-size: 14px;
+  color: #d5e6da;
+  margin: 8px 0 0;
+}
+.sample-label {
+  font-size: 11px;
+  color: #71572e;
+  background: #faf5e9;
+  padding: 10px 20px;
+  margin: 0 14px 14px;
+  border-radius: 8px;
+  line-height: 1.6;
+}
+.friday {
+  margin-block-start: 22px;
+}
+.friday h3,
+.address h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+.address {
+  margin-block-start: 24px;
+  padding-block-start: 18px;
+  border-block-start: 1px solid #dce3d8;
+  font-size: 14px;
+  line-height: 1.8;
+}
+.back-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+}
+@media (max-width: 640px) {
+  .directory-shell,
+  .detail-shell {
+    padding-inline: 16px;
+  }
+  .mosque-grid {
+    grid-template-columns: 1fr;
+  }
+  .discovery-controls {
+    padding: 18px;
+  }
+  .actions > .button {
+    flex-grow: 1;
+  }
+  .results-heading {
+    flex-wrap: wrap;
+  }
+  .section-heading {
+    flex-wrap: wrap;
+  }
+}
+
+@theme inline {
+  --color-background: #f7f8f4;
+  --color-foreground: #193c36;
+  --color-primary: #174f46;
+  --font-sans: Arial, Helvetica, sans-serif;
+}

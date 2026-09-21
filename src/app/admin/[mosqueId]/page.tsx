@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireMember } from "@/server/auth";
 import { mapAdminSchedule } from "@/server/public-mappers";
 import { mosqueLocalDate } from "@/domain/schedule";
-import { ScheduleEditor } from "@/components/schedule-editor";
+import { ScheduleEditor } from "@/features/administration/components/schedule-editor";
 export const dynamic = "force-dynamic";
 export default async function ManageMosque({
   params,
